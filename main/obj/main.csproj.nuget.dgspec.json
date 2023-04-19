@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/laskav/Projects/Bot_quiz/main/main.csproj": {}
+    "/Users/laskav/Projects/bot/Bot_quiz/main/main.csproj": {}
   },
   "projects": {
-    "/Users/laskav/Projects/Bot_quiz/main/main.csproj": {
+    "/Users/laskav/Projects/bot/Bot_quiz/main/main.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/laskav/Projects/Bot_quiz/main/main.csproj",
+        "projectUniqueName": "/Users/laskav/Projects/bot/Bot_quiz/main/main.csproj",
         "projectName": "main",
-        "projectPath": "/Users/laskav/Projects/Bot_quiz/main/main.csproj",
+        "projectPath": "/Users/laskav/Projects/bot/Bot_quiz/main/main.csproj",
         "packagesPath": "/Users/laskav/.nuget/packages/",
-        "outputPath": "/Users/laskav/Projects/Bot_quiz/main/obj/",
+        "outputPath": "/Users/laskav/Projects/bot/Bot_quiz/main/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/laskav/.nuget/NuGet/NuGet.Config"

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Skj9MX6poVH2x5DWcozkJslF+IiQBgPUsqcgJjIxvqtlCFt2nQ0MYYzGOLJ8McuP/oC6oXqS7AMwzBcnyIU4PA==",
+  "dgSpecHash": "PsaPrSPwTXWnYJEZmP0ecMUsDk3wb9yIv6VJ92HkRZ1yN32+PbAHjJOffHIMHmUUQCCzKkWTLyWS/cgYza4BGw==",
   "success": true,
-  "projectFilePath": "/Users/laskav/Projects/Bot_quiz/main/main.csproj",
+  "projectFilePath": "/Users/laskav/Projects/bot/Bot_quiz/main/main.csproj",
   "expectedPackageFiles": [
     "/Users/laskav/.nuget/packages/newtonsoft.json/12.0.2/newtonsoft.json.12.0.2.nupkg.sha512",
     "/Users/laskav/.nuget/packages/telegram.bot/18.0.0/telegram.bot.18.0.0.nupkg.sha512"
