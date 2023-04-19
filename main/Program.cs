@@ -4,6 +4,9 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using static main.User;
+
+
 
 // Подключаем бота через свой API key
 const string Token = "6250535845:AAG4xaJ4ls3J5gjFktEHQgr9ddI0iwTQBqU";
@@ -14,12 +17,12 @@ ReceiverOptions receiverOptions = new()
 {
     AllowedUpdates = Array.Empty<UpdateType>()
 };
+
 bot.StartReceiving(
     updateHandler: Update,
     pollingErrorHandler: Error,
     cancellationToken: cts.Token
 );
-
 
 var me = await bot.GetMeAsync();
 
@@ -28,8 +31,10 @@ Console.ReadLine();
 cts.Cancel();
 
 // обработка сообщений 
-async Task Update(ITelegramBotClient bot,
-    Update update, CancellationToken Token)
+async Task Update(
+    ITelegramBotClient bot,
+    Update update,
+    CancellationToken Token)
 {
     var message = update.Message;
 
@@ -37,68 +42,98 @@ async Task Update(ITelegramBotClient bot,
         $"user_id: {message.Chat.Id}" +
         $"\nuser_mess: {message.Text}"
         );
-    
+
     if (message.Text is not null)
     {
         if (message.Text == "/start")
         {
-            if (message.Chat.Username is null)
-            {
-                await bot.SendTextMessageAsync(
+            Console.WriteLine($"message.Text =  {message.Text}");
+
+            int day = 21;
+            int month = 11;
+            int year = 2001;
+            string login = null;
+            string password = null;
+
+            await bot.SendTextMessageAsync(
                 message.Chat.Id,
-                $"<code>🤖 BOT: </code>" +
+                $"<code>🤖 BOT: </code> " +
                 $"<b>Привет {message.Chat.FirstName} 👋</b>" +
-                $"\n\n<b>🎉 Добро пожаловать на викторину 🎉</b>" +
-                $"\n\n    <b>🎲ИГРА🎲</b>" +
-                $"\n\n<b>Доступно 4 раздела викторины:</b>" +
-                $"\n\n<b>1️⃣ 💂‍♀️История👩‍🚀 </b>" +
-                $"\n\n<b>2️⃣ 🏛География✈️ </b>" +
-                $"\n\n<b>3️⃣ 🔬Биология🦠</b>" +
-                $"\n\n<b>4️⃣ 👽Смешанная👀</b>" +
-                $"\n\n<b>🏆Награды🏆</b>" +
-                $"\n\n<b>🥇 20 - 18 правильных ответов</b>" +
-                $"\n\n<b>🥈 17 - 11 правильных ответов</b>" +
-                $"\n\n<b>🥉 10 - 1 правильных ответов</b>" +
-                $"\n\n    <b>📈Статистика📉</b>" +
-                $"\n\n<b>1️⃣ Результаты прошлых викторин </b>" +
-                $"\n\n<b>2️⃣ ТОП - 20 по разделам </b>" +
-                $"\n\n    <b>⚙️Настройки⚙️</b>" +
-                $"\n\n<b>Смена пароля</b>" +
-                $"\n\n<b>Смена даты рождения</b>",
-                replyMarkup: Top_menu(),
+                $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
                 parseMode: ParseMode.Html
                 );
-                return;
-            }
-            else
-            {
-                await bot.SendTextMessageAsync(
+
+
+            await bot.SendTextMessageAsync(
                 message.Chat.Id,
-                $"<code>🤖 BOT: </code>" +
-                $"<b>Привет @{message.Chat.Username} 👋</b>" +
-                $"\n\n<b>🎉 Добро пожаловать на викторину 🎉</b>" +
-                $"\n\n    <b>🎲ИГРА🎲</b>" +
-                $"\n\n<b>Доступно 4 раздела викторины:</b>" +
-                $"\n\n<b>1️⃣ 💂‍♀️История👩‍🚀 </b>" +
-                $"\n\n<b>2️⃣ 🏛География✈️ </b>" +
-                $"\n\n<b>3️⃣ 🔬Биология🦠</b>" +
-                $"\n\n<b>4️⃣ 👽Смешанная👀</b>" +
-                $"\n\n<b>🏆Награды🏆</b>" +
-                $"\n\n<b>🥇 20 - 18 правильных ответов</b>" +
-                $"\n\n<b>🥈 17 - 11 правильных ответов</b>" +
-                $"\n\n<b>🥉 10 - 1 правильных ответов</b>" +
-                $"\n\n    <b>📈Статистика📉</b>" +
-                $"\n\n<b>1️⃣ Результаты прошлых викторин </b>" +
-                $"\n\n<b>2️⃣ ТОП - 20 по разделам </b>" +
-                $"\n\n    <b>⚙️Настройки⚙️</b>" +
-                $"\n\n<b>1️⃣ Смена пароля</b>" +
-                $"\n\n<b>2️⃣ Смена даты рождения</b>",
-                replyMarkup: Top_menu(),
+                $"<code>🤖 BOT:</code><b> Придумай логин: </b> ",
                 parseMode: ParseMode.Html
                 );
-                return;
-            }
+
+
+            var user = new main.User
+            (message.Chat.Id.ToString(),
+            new DateTime(year, month, day),
+            login,
+            "523asd");
+            user.Show_user();
         }
+    }
+           
+            
+
+            //if (message.Chat.Username is null)
+            //{
+            //    await bot.SendTextMessageAsync(
+            //    message.Chat.Id,
+            //    $"\n\n<b>🎉 Добро пожаловать на викторину 🎉</b>" +
+            //    $"\n\n    <b>🎲ИГРА🎲</b>" +
+            //    $"\n\n<b>Доступно 4 раздела викторины:</b>" +
+            //    $"\n\n<b>1️⃣ 💂‍♀️История👩‍🚀 </b>" +
+            //    $"\n\n<b>2️⃣ 🏛География✈️ </b>" +
+            //    $"\n\n<b>3️⃣ 🔬Биология🦠</b>" +
+            //    $"\n\n<b>4️⃣ 👽Смешанная👀</b>" +
+            //    $"\n\n<b>🏆Награды🏆</b>" +
+            //    $"\n\n<b>🥇 20 - 18 правильных ответов</b>" +
+            //    $"\n\n<b>🥈 17 - 11 правильных ответов</b>" +
+            //    $"\n\n<b>🥉 10 - 1 правильных ответов</b>" +
+            //    $"\n\n    <b>📈Статистика📉</b>" +
+            //    $"\n\n<b>1️⃣ Результаты прошлых викторин </b>" +
+            //    $"\n\n<b>2️⃣ ТОП - 20 по разделам </b>" +
+            //    $"\n\n    <b>⚙️Настройки⚙️</b>" +
+            //    $"\n\n<b>Смена пароля</b>" +
+            //    $"\n\n<b>Смена даты рождения</b>",
+            //    replyMarkup: Top_menu(),
+            //    parseMode: ParseMode.Html
+            //    );
+            //    return;
+            //}
+            //else
+            //{
+            //    await bot.SendTextMessageAsync(
+            //    message.Chat.Id,
+            //    $"\n\n<b>🎉 Добро пожаловать на викторину 🎉</b>" +
+            //    $"\n\n    <b>🎲ИГРА🎲</b>" +
+            //    $"\n\n<b>Доступно 4 раздела викторины:</b>" +
+            //    $"\n\n<b>1️⃣ 💂‍♀️История👩‍🚀 </b>" +
+            //    $"\n\n<b>2️⃣ 🏛География✈️ </b>" +
+            //    $"\n\n<b>3️⃣ 🔬Биология🦠</b>" +
+            //    $"\n\n<b>4️⃣ 👽Смешанная👀</b>" +
+            //    $"\n\n<b>🏆Награды🏆</b>" +
+            //    $"\n\n<b>🥇 20 - 18 правильных ответов</b>" +
+            //    $"\n\n<b>🥈 17 - 11 правильных ответов</b>" +
+            //    $"\n\n<b>🥉 10 - 1 правильных ответов</b>" +
+            //    $"\n\n    <b>📈Статистика📉</b>" +
+            //    $"\n\n<b>1️⃣ Результаты прошлых викторин </b>" +
+            //    $"\n\n<b>2️⃣ ТОП - 20 по разделам </b>" +
+            //    $"\n\n    <b>⚙️Настройки⚙️</b>" +
+            //    $"\n\n<b>1️⃣ Смена пароля</b>" +
+            //    $"\n\n<b>2️⃣ Смена даты рождения</b>",
+            //    replyMarkup: Top_menu(),
+            //    parseMode: ParseMode.Html
+            //    );
+            //    return;
+            //}
         if (message.Text == "🎲 Играть 🎲")
         {
             await bot.SendTextMessageAsync(
@@ -131,8 +166,6 @@ async Task Update(ITelegramBotClient bot,
                 replyMarkup: Top_menu(),
                 parseMode: ParseMode.Html);
         }
-
-    }
 }
 
 static IReplyMarkup Top_menu()
@@ -228,7 +261,10 @@ static IReplyMarkup Settings_menu()
 }
 
 
-Task Error(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+Task Error(
+    ITelegramBotClient botClient,
+    Exception exception,
+    CancellationToken cancellationToken)
 {
     var ErrorMessage = exception switch
     {
