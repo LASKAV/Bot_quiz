@@ -1,0 +1,68 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/laskav/Projects/Bot_quiz/main/main.csproj": {}
+  },
+  "projects": {
+    "/Users/laskav/Projects/Bot_quiz/main/main.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/laskav/Projects/Bot_quiz/main/main.csproj",
+        "projectName": "main",
+        "projectPath": "/Users/laskav/Projects/Bot_quiz/main/main.csproj",
+        "packagesPath": "/Users/laskav/.nuget/packages/",
+        "outputPath": "/Users/laskav/Projects/Bot_quiz/main/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/laskav/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net7.0"
+        ],
+        "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net7.0": {
+            "targetAlias": "net7.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net7.0": {
+          "targetAlias": "net7.0",
+          "dependencies": {
+            "Telegram.Bot": {
+              "target": "Package",
+              "version": "[18.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/7.0.203/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
