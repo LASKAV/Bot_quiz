@@ -62,7 +62,6 @@ async Task Update(ITelegramBotClient bot,
             }
             else
             {
-                // sdgs
                 await bot.SendTextMessageAsync(
                 message.Chat.Id,
                 $"<code>🤖 BOT: </code>" +
@@ -92,7 +91,7 @@ async Task Update(ITelegramBotClient bot,
         }
         if (message.Text == "photo")
         {
-
+            // обработка фото 
         }
 
     }
