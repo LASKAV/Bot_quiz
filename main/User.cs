@@ -3,26 +3,26 @@ namespace main
 {
     public class User
     {
-        public string user_tgid;
-        public DateTime date;
-        public string login;
-        public string password;
+        public string UserTgid;
+        public DateTime Date;
+        public string Login;
+        public string Password;
 
-        public User(string user_tgid, DateTime date,
+        public User(string userTgid, DateTime date,
             string login, string password)
         {
-            this.user_tgid = user_tgid;
-            this.date = new DateTime(date.Year, date.Month, date.Day);
-            this.login = login;
-            this.password = password;
+            this.UserTgid = userTgid;
+            this.Date = new DateTime(date.Year, date.Month, date.Day);
+            this.Login = login;
+            this.Password = password;
         }
 
         public void Show_user()
         {
-            Console.WriteLine($"\nuser_tgid: {this.user_tgid}");
-            Console.WriteLine($"date: {this.date.ToShortDateString()}");
-            Console.WriteLine($"login: {this.login}");
-            Console.WriteLine($"password: {this.password}");
+            Console.WriteLine($"\nuser_tgid: {this.UserTgid}");
+            Console.WriteLine($"date: {this.Date.ToShortDateString()}");
+            Console.WriteLine($"login: {this.Login}");
+            Console.WriteLine($"password: {this.Password}");
 
         }
     }

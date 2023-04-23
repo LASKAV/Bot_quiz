@@ -1,6 +1,7 @@
 ﻿using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
+using Telegram.Bot.Args;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -9,14 +10,15 @@ using static main.User;
 
 
 // Подключаем бота через свой API key
-const string Token = "6250535845:AAG4xaJ4ls3J5gjFktEHQgr9ddI0iwTQBqU";
-var bot = new TelegramBotClient(Token);
+const string token = "6250535845:AAG4xaJ4ls3J5gjFktEHQgr9ddI0iwTQBqU";
+var bot = new TelegramBotClient(token);
 
 using CancellationTokenSource cts = new();
 ReceiverOptions receiverOptions = new()
 {
     AllowedUpdates = Array.Empty<UpdateType>()
 };
+
 
 bot.StartReceiving(
     updateHandler: Update,
@@ -30,59 +32,9 @@ Console.WriteLine($"Запус бота @{me.Username}");
 Console.ReadLine();
 cts.Cancel();
 
-// обработка сообщений 
-async Task Update(
-    ITelegramBotClient bot,
-    Update update,
-    CancellationToken Token)
-{
-    var message = update.Message;
 
-    Console.WriteLine(
-        $"user_id: {message.Chat.Id}" +
-        $"\nuser_mess: {message.Text}"
-        );
-
-    if (message.Text is not null)
-    {
-        if (message.Text == "/start")
-        {
-            Console.WriteLine($"message.Text =  {message.Text}");
-
-            int day = 21;
-            int month = 11;
-            int year = 2001;
-            string login = null;
-            string password = null;
-
-            await bot.SendTextMessageAsync(
-                message.Chat.Id,
-                $"<code>🤖 BOT: </code> " +
-                $"<b>Привет {message.Chat.FirstName} 👋</b>" +
-                $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
-                parseMode: ParseMode.Html
-                );
-
-
-            await bot.SendTextMessageAsync(
-                message.Chat.Id,
-                $"<code>🤖 BOT:</code><b> Придумай логин: </b> ",
-                parseMode: ParseMode.Html
-                );
-
-
-            var user = new main.User
-            (message.Chat.Id.ToString(),
-            new DateTime(year, month, day),
-            login,
-            "523asd");
-            user.Show_user();
-        }
-    }
-           
-            
-
-            //if (message.Chat.Username is null)
+}
+//if (message.Chat.Username is null)
             //{
             //    await bot.SendTextMessageAsync(
             //    message.Chat.Id,
@@ -134,130 +86,130 @@ async Task Update(
             //    );
             //    return;
             //}
-        if (message.Text == "🎲 Играть 🎲")
-        {
-            await bot.SendTextMessageAsync(
-                message.Chat.Id,
-                $"<code>🤖 BOT:</code><b> Выбери викторину 🔮 </b>",
-                replyMarkup: Game_menu(),
-                parseMode: ParseMode.Html);
-        }
-        if (message.Text == "📈 Статистика 📉")
-        {
-            await bot.SendTextMessageAsync(
-                message.Chat.Id,
-                $"<code>🤖 BOT:</code><b> Выбери статистику 📊</b>",
-                replyMarkup: Statistics_menu(),
-                parseMode: ParseMode.Html);
-        }
-        if (message.Text == "⚙️ Настройки ⚙️")
-        {
-            await bot.SendTextMessageAsync(
-                message.Chat.Id,
-                $"<code>🤖 BOT:</code><b> Выбери раздел 🛠 </b>",
-                replyMarkup: Settings_menu(),
-                parseMode: ParseMode.Html);
-        }
-        if (message.Text == "🔙 Назад 🔙")
-        {
-            await bot.SendTextMessageAsync(
-                message.Chat.Id,
-                $"<code>🤖 BOT:</code><b> назад  🚀 </b>",
-                replyMarkup: Top_menu(),
-                parseMode: ParseMode.Html);
-        }
-}
+//        if (message.Text == "🎲 Играть 🎲")
+//        {
+//            await bot.SendTextMessageAsync(
+//                message.Chat.Id,
+//                $"<code>🤖 BOT:</code><b> Выбери викторину 🔮 </b>",
+//                replyMarkup: GameMenu(),
+//                parseMode: ParseMode.Html);
+//        }
+//        if (message.Text == "📈 Статистика 📉")
+//        {
+//            await bot.SendTextMessageAsync(
+//                message.Chat.Id,
+//                $"<code>🤖 BOT:</code><b> Выбери статистику 📊</b>",
+//                replyMarkup: StatisticsMenu(),
+//                parseMode: ParseMode.Html);
+//        }
+//        if (message.Text == "⚙️ Настройки ⚙️")
+//        {
+//            await bot.SendTextMessageAsync(
+//                message.Chat.Id,
+//                $"<code>🤖 BOT:</code><b> Выбери раздел 🛠 </b>",
+//                replyMarkup: SettingsMenu(),
+//                parseMode: ParseMode.Html);
+//        }
+//        if (message.Text == "🔙 Назад 🔙")
+//        {
+//            await bot.SendTextMessageAsync(
+//                message.Chat.Id,
+//                $"<code>🤖 BOT:</code><b> назад  🚀 </b>",
+//                replyMarkup: TopMenu(),
+//                parseMode: ParseMode.Html);
+//        }
+//}
 
-static IReplyMarkup Top_menu()
+static IReplyMarkup TopMenu()
 {
     //-----------------------------//
-    KeyboardButton batton_top_game = "🎲 Играть 🎲";
-    KeyboardButton batton_top_stat = "📈 Статистика 📉";
-    KeyboardButton batton_top_settings = "⚙️ Настройки ⚙️";
+    KeyboardButton battonTopGame = "🎲 Играть 🎲";
+    KeyboardButton battonTopStat = "📈 Статистика 📉";
+    KeyboardButton battonTopSettings = "⚙️ Настройки ⚙️";
     //-----------------------------//
 
-    ReplyKeyboardMarkup Top_menu = new(new[]
+    ReplyKeyboardMarkup topMenu = new(new[]
     {
-    new KeyboardButton[] { batton_top_game, batton_top_stat },
-    new KeyboardButton[] { batton_top_settings },
+    new KeyboardButton[] { battonTopGame, battonTopStat },
+    new KeyboardButton[] { battonTopSettings },
     }
     )
     {
         ResizeKeyboard = true
     };
 
-    return Top_menu;
+    return topMenu;
 }
-static IReplyMarkup Game_menu()
+static IReplyMarkup GameMenu()
 {
     //-----------------------------//
 
-    KeyboardButton batton_Game_History = "💂‍♀️ История 👩‍🚀";
-    KeyboardButton batton_Game_Geography = "🏛 География ✈️";
-    KeyboardButton batton_Game_Biology = "🔬 Биология 🦠";
-    KeyboardButton batton_Game_Mixed = "👽 Смешанная 👀";
-    KeyboardButton button_Game_Back = "🔙 Назад 🔙";
+    KeyboardButton battonGameHistory = "💂‍♀️ История 👩‍🚀";
+    KeyboardButton battonGameGeography = "🏛 География ✈️";
+    KeyboardButton battonGameBiology = "🔬 Биология 🦠";
+    KeyboardButton battonGameMixed = "👽 Смешанная 👀";
+    KeyboardButton buttonGameBack = "🔙 Назад 🔙";
 
     //-----------------------------//
 
-    ReplyKeyboardMarkup Game_menu = new(new[]
+    ReplyKeyboardMarkup gameMenu = new(new[]
     {
-    new KeyboardButton[] { batton_Game_History, batton_Game_Geography },
-    new KeyboardButton[] { batton_Game_Biology, batton_Game_Mixed},
-     new KeyboardButton[] { button_Game_Back},
+    new KeyboardButton[] { battonGameHistory, battonGameGeography },
+    new KeyboardButton[] { battonGameBiology, battonGameMixed},
+     new KeyboardButton[] { buttonGameBack},
     }
     )
     {
         ResizeKeyboard = true
     };
 
-    return Game_menu;
+    return gameMenu;
 }
-static IReplyMarkup Statistics_menu()
+static IReplyMarkup StatisticsMenu()
 {
     //-----------------------------//
-    KeyboardButton batton_Statistics_History
+    KeyboardButton battonStatisticsHistory
         = "🎖 Результаты прошлых викторин 🎖";
-    KeyboardButton batton_Statistics_Geography
+    KeyboardButton battonStatisticsGeography
         = "🏆 ТОП - 20 по разделам 🏆";
-    KeyboardButton button_Statistics_Back = "🔙 Назад 🔙";
+    KeyboardButton buttonStatisticsBack = "🔙 Назад 🔙";
 
   //-----------------------------//
 
-  ReplyKeyboardMarkup Statistics_menu = new(new[]
+  ReplyKeyboardMarkup statisticsMenu = new(new[]
     {
-    new KeyboardButton[] { batton_Statistics_History, batton_Statistics_Geography },
-     new KeyboardButton[] { button_Statistics_Back},
+    new KeyboardButton[] { battonStatisticsHistory, battonStatisticsGeography },
+     new KeyboardButton[] { buttonStatisticsBack},
     }
     )
     {
         ResizeKeyboard = true
     };
 
-    return Statistics_menu;
+    return statisticsMenu;
 }
-static IReplyMarkup Settings_menu()
+static IReplyMarkup SettingsMenu()
 {
     //-----------------------------//
-    KeyboardButton batton_Settings_pass
+    KeyboardButton battonSettingsPass
         = "🔧 Смена пароля 🔧";
-    KeyboardButton batton_Settings_dates
+    KeyboardButton battonSettingsDates
         = "👶 Смена даты рождения 👶";
-    KeyboardButton batton_Settings_Back = "🔙 Назад 🔙";
+    KeyboardButton battonSettingsBack = "🔙 Назад 🔙";
 
     //-----------------------------//
 
-    ReplyKeyboardMarkup Settings_menu = new(new[]
+    ReplyKeyboardMarkup settingsMenu = new(new[]
       {
-    new KeyboardButton[] { batton_Settings_pass, batton_Settings_dates },
-     new KeyboardButton[] { batton_Settings_Back},
+    new KeyboardButton[] { battonSettingsPass, battonSettingsDates },
+     new KeyboardButton[] { battonSettingsBack},
     }
       )
     {
         ResizeKeyboard = true
     };
 
-    return Settings_menu;
+    return settingsMenu;
 }
 
 
@@ -266,14 +218,14 @@ Task Error(
     Exception exception,
     CancellationToken cancellationToken)
 {
-    var ErrorMessage = exception switch
+    var errorMessage = exception switch
     {
         ApiRequestException apiRequestException
             => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
         _ => exception.ToString()
     };
 
-    Console.WriteLine(ErrorMessage);
+    Console.WriteLine(errorMessage);
     return Task.CompletedTask;
 }
 
