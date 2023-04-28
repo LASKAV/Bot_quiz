@@ -3,10 +3,12 @@ namespace main
 {
     public class User
     {
-        public string UserTgid;
-        public DateTime Date;
-        public string Login;
-        public string Password;
+        public string UserTgid { get; set; }
+        public DateTime Date { get; set; }
+        public string Login { get; set; }
+        public string Password { get; set; }
+
+        public User() { }
 
         public User(string userTgid, DateTime date,
             string login, string password)
