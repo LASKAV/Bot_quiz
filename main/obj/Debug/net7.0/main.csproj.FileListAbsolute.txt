@@ -34,3 +34,6 @@
 /Users/laskav/Projects/bot/Bot_quiz/main/obj/Debug/net7.0/main.pdb
 /Users/laskav/Projects/bot/Bot_quiz/main/obj/Debug/net7.0/main.genruntimeconfig.cache
 /Users/laskav/Projects/bot/Bot_quiz/main/obj/Debug/net7.0/ref/main.dll
+/Users/laskav/Projects/bot/Bot_quiz/main/bin/Debug/net7.0/Telegram.Bot.Extensions.Markup.dll
+/Users/laskav/Projects/bot/Bot_quiz/main/bin/Debug/net7.0/Telegram.Bot.Extensions.Passport.dll
+/Users/laskav/Projects/bot/Bot_quiz/main/bin/Debug/net7.0/Interactivity.dll

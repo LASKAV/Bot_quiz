@@ -8,11 +8,41 @@
     ".NETCoreApp,Version=v7.0": {
       "main/1.0.0": {
         "dependencies": {
+          "Microsoft.NETCore.App": "2.2.8",
           "Newtonsoft.Json": "13.0.3",
-          "Telegram.Bot": "18.0.0"
+          "Telegram.Bot": "18.0.0",
+          "Telegram.Bot.Extensions.Markup": "1.0.1",
+          "Telegram.Bot.Extensions.Passport": "1.0.0",
+          "Telegram.Bot.InteractivityHelper": "1.5.0"
         },
         "runtime": {
           "main.dll": {}
+        }
+      },
+      "Microsoft.NETCore.App/2.2.8": {
+        "dependencies": {
+          "Microsoft.NETCore.DotNetHostPolicy": "2.2.8",
+          "Microsoft.NETCore.Platforms": "2.2.4",
+          "Microsoft.NETCore.Targets": "2.0.0",
+          "NETStandard.Library": "2.0.3"
+        }
+      },
+      "Microsoft.NETCore.DotNetAppHost/2.2.8": {},
+      "Microsoft.NETCore.DotNetHostPolicy/2.2.8": {
+        "dependencies": {
+          "Microsoft.NETCore.DotNetHostResolver": "2.2.8"
+        }
+      },
+      "Microsoft.NETCore.DotNetHostResolver/2.2.8": {
+        "dependencies": {
+          "Microsoft.NETCore.DotNetAppHost": "2.2.8"
+        }
+      },
+      "Microsoft.NETCore.Platforms/2.2.4": {},
+      "Microsoft.NETCore.Targets/2.0.0": {},
+      "NETStandard.Library/2.0.3": {
+        "dependencies": {
+          "Microsoft.NETCore.Platforms": "2.2.4"
         }
       },
       "Newtonsoft.Json/13.0.3": {
@@ -33,6 +63,39 @@
             "fileVersion": "18.0.0.0"
           }
         }
+      },
+      "Telegram.Bot.Extensions.Markup/1.0.1": {
+        "dependencies": {
+          "Telegram.Bot": "18.0.0"
+        },
+        "runtime": {
+          "lib/net6.0/Telegram.Bot.Extensions.Markup.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Telegram.Bot.Extensions.Passport/1.0.0": {
+        "dependencies": {
+          "Telegram.Bot": "18.0.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Telegram.Bot.Extensions.Passport.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Telegram.Bot.InteractivityHelper/1.5.0": {
+        "dependencies": {
+          "Telegram.Bot": "18.0.0"
+        },
+        "runtime": {
+          "lib/netcoreapp2.2/Interactivity.dll": {
+            "assemblyVersion": "1.5.0.0",
+            "fileVersion": "1.5.0.0"
+          }
+        }
       }
     }
   },
@@ -41,6 +104,55 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "Microsoft.NETCore.App/2.2.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-GOxlvyc8hFrnhDjYlm25JJ7PwoyeoOpZzcg6ZgF8n8l6VxezNupRkkTeA2ek1WsspN0CdAoA8e7iDVNU84/F+Q==",
+      "path": "microsoft.netcore.app/2.2.8",
+      "hashPath": "microsoft.netcore.app.2.2.8.nupkg.sha512"
+    },
+    "Microsoft.NETCore.DotNetAppHost/2.2.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Lh1F6z41levvtfC3KuuiQe9ppWKRP1oIB42vP1QNQE4uumo95h+LpjPDeysX1DlTjCzG0BVGSUEpCW5fHkni7w==",
+      "path": "microsoft.netcore.dotnetapphost/2.2.8",
+      "hashPath": "microsoft.netcore.dotnetapphost.2.2.8.nupkg.sha512"
+    },
+    "Microsoft.NETCore.DotNetHostPolicy/2.2.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-rOHr0Dk87vaiq9d1hMpXETB4IKq1jIiPQlVKNUjRGilK/cjOcadhsk+1MsrJ/GnM3eovhy8zW2PGkN8pYEolnw==",
+      "path": "microsoft.netcore.dotnethostpolicy/2.2.8",
+      "hashPath": "microsoft.netcore.dotnethostpolicy.2.2.8.nupkg.sha512"
+    },
+    "Microsoft.NETCore.DotNetHostResolver/2.2.8": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-culLr+x2GvUkXVGi4ULZ7jmWJEhuAMyS7iTWBlkWnqbKtYJ36ZlgHbw/6qTm82790gJemEFeo9RehDwfRXfJzA==",
+      "path": "microsoft.netcore.dotnethostresolver/2.2.8",
+      "hashPath": "microsoft.netcore.dotnethostresolver.2.2.8.nupkg.sha512"
+    },
+    "Microsoft.NETCore.Platforms/2.2.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ZeCe9PRhMpKzVWrNgTvWpLjJigppErzN663lJOqAzcx0xjXpcAMpIImFI46IE1gze18VWw6bbfo7JDkcaRWuOg==",
+      "path": "microsoft.netcore.platforms/2.2.4",
+      "hashPath": "microsoft.netcore.platforms.2.2.4.nupkg.sha512"
+    },
+    "Microsoft.NETCore.Targets/2.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-odP/tJj1z6GylFpNo7pMtbd/xQgTC3Ex2If63dRTL38bBNMwsBnJ+RceUIyHdRBC0oik/3NehYT+oECwBhIM3Q==",
+      "path": "microsoft.netcore.targets/2.0.0",
+      "hashPath": "microsoft.netcore.targets.2.0.0.nupkg.sha512"
+    },
+    "NETStandard.Library/2.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-st47PosZSHrjECdjeIzZQbzivYBJFv6P2nv4cj2ypdI204DO+vZ7l5raGMiX4eXMJ53RfOIg+/s4DHVZ54Nu2A==",
+      "path": "netstandard.library/2.0.3",
+      "hashPath": "netstandard.library.2.0.3.nupkg.sha512"
     },
     "Newtonsoft.Json/13.0.3": {
       "type": "package",
@@ -55,6 +167,27 @@
       "sha512": "sha512-BD0UchUXINymCGS+1O1tv2enCRyv+VbSJQAgfnueTZs3j7K4XXyJyW0CgyJleTrqB1oq1hS1ux6gBpi3Ajp+ZQ==",
       "path": "telegram.bot/18.0.0",
       "hashPath": "telegram.bot.18.0.0.nupkg.sha512"
+    },
+    "Telegram.Bot.Extensions.Markup/1.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-u33HQ7ilo3lem7sitELsm6OV0dg6Db8CCs2eJxG4Eaut2APscKWK/1zvDxLzxFfd0eJZxlJK3Fona8ikg6ZtXA==",
+      "path": "telegram.bot.extensions.markup/1.0.1",
+      "hashPath": "telegram.bot.extensions.markup.1.0.1.nupkg.sha512"
+    },
+    "Telegram.Bot.Extensions.Passport/1.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-xy0aF9dKcdQe8PkI1X96BXzB0ACJXxxKwPdtt6Xsl7qxhXwmtx+sxqJ1nnPLVLM9TA15A0KRWqp8kY71b68JFQ==",
+      "path": "telegram.bot.extensions.passport/1.0.0",
+      "hashPath": "telegram.bot.extensions.passport.1.0.0.nupkg.sha512"
+    },
+    "Telegram.Bot.InteractivityHelper/1.5.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-a3RBGXoAJzIK8zEu8cG/8yqut07RNdlN+w7PG18arvSgkfG6ZqbI3gVbArHHh4+ZvnSHY2qumRUXx4Vo4/+TAw==",
+      "path": "telegram.bot.interactivityhelper/1.5.0",
+      "hashPath": "telegram.bot.interactivityhelper.1.5.0.nupkg.sha512"
     }
   }
 }

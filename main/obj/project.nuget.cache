@@ -1,11 +1,21 @@
 {
   "version": 2,
-  "dgSpecHash": "5ptIKK9ggRyPWKLK0oaN6yqF7S+/qOqHv8mbx/mvxItOPMoaNfOz33pgEzfu/aGLXa1VNGjczzoBYJ/cgaShQA==",
+  "dgSpecHash": "l+G2Rly2IvuJlEX/hHAnFIWplk/DgGf6qStj4x49ERWrvPzANu5XXfAdBExSoCzfdAhnJElmMD9au6bUyYocgQ==",
   "success": true,
   "projectFilePath": "/Users/laskav/Projects/bot/Bot_quiz/main/main.csproj",
   "expectedPackageFiles": [
+    "/Users/laskav/.nuget/packages/microsoft.netcore.app/2.2.8/microsoft.netcore.app.2.2.8.nupkg.sha512",
+    "/Users/laskav/.nuget/packages/microsoft.netcore.dotnetapphost/2.2.8/microsoft.netcore.dotnetapphost.2.2.8.nupkg.sha512",
+    "/Users/laskav/.nuget/packages/microsoft.netcore.dotnethostpolicy/2.2.8/microsoft.netcore.dotnethostpolicy.2.2.8.nupkg.sha512",
+    "/Users/laskav/.nuget/packages/microsoft.netcore.dotnethostresolver/2.2.8/microsoft.netcore.dotnethostresolver.2.2.8.nupkg.sha512",
+    "/Users/laskav/.nuget/packages/microsoft.netcore.platforms/2.2.4/microsoft.netcore.platforms.2.2.4.nupkg.sha512",
+    "/Users/laskav/.nuget/packages/microsoft.netcore.targets/2.0.0/microsoft.netcore.targets.2.0.0.nupkg.sha512",
+    "/Users/laskav/.nuget/packages/netstandard.library/2.0.3/netstandard.library.2.0.3.nupkg.sha512",
     "/Users/laskav/.nuget/packages/newtonsoft.json/13.0.3/newtonsoft.json.13.0.3.nupkg.sha512",
-    "/Users/laskav/.nuget/packages/telegram.bot/18.0.0/telegram.bot.18.0.0.nupkg.sha512"
+    "/Users/laskav/.nuget/packages/telegram.bot/18.0.0/telegram.bot.18.0.0.nupkg.sha512",
+    "/Users/laskav/.nuget/packages/telegram.bot.extensions.markup/1.0.1/telegram.bot.extensions.markup.1.0.1.nupkg.sha512",
+    "/Users/laskav/.nuget/packages/telegram.bot.extensions.passport/1.0.0/telegram.bot.extensions.passport.1.0.0.nupkg.sha512",
+    "/Users/laskav/.nuget/packages/telegram.bot.interactivityhelper/1.5.0/telegram.bot.interactivityhelper.1.5.0.nupkg.sha512"
   ],
   "logs": []
 }

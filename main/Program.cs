@@ -22,6 +22,22 @@ ReceiverOptions receiverOptions = new()
     AllowedUpdates = Array.Empty<UpdateType>()
 };
 
+/*
+ // хелп команд 
+//var commands = new List<BotCommand>
+//{
+//    new BotCommand { Command = "start", Description = "Запустить бота" },
+//    new BotCommand { Command = "help", Description = "Показать помощь" }
+//};
+//
+//
+//bot.SetMyCommandsAsync(commands);
+ */
+
+
+int loginState = 0; // начальное состояние
+
+
 bot.StartReceiving(
     updateHandler: Update,
     pollingErrorHandler: Error,
@@ -30,16 +46,30 @@ bot.StartReceiving(
 );
 
 var me = await bot.GetMeAsync();
-
 Console.WriteLine($"Запус бота @{me.Username}");
+
 Console.ReadLine();
 cts.Cancel();
 
-// обработка сообщений
+/*
+ //async Task CallbackQueryHandler(ITelegramBotClient bot, CallbackQuery query)
+//{
+//    string buttonText = query.Data;
+//    string name = $"{query.From.FirstName} {query.From.LastName}";
+//    Console.WriteLine($"{name} нажал кнопку {buttonText}");
+//
+//    await bot.AnswerCallbackQueryAsync
+//        (query.Id, $"Вы нажали кнопку {buttonText}");
+//}
+//
+ */
+
+
 async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
 {
-    if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message &&
-        update.Message!.Type == Telegram.Bot.Types.Enums.MessageType.Text)
+    
+    if (update.Type == UpdateType.Message &&
+        update?.Message?.Text != null)
     {
         var userID = update.Message.Chat.Id;
         var messageText = update.Message.Text;
@@ -52,25 +82,107 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
             $"\nfirstName: {firstName}" +
             $"\nlastName: {lastName}");
 
-        if (messageText.StartsWith("/start"))
-        {
-            await HandleStartCommand(bot, userID, firstName);
-            return;
-        }
-        if (messageText.StartsWith("login"))
-        { 
-            await HandleLogin(bot, update, userID);
+        // обработка сообщений
+        await HandleMesssage(bot, update.Message);
 
-            // Получаем текст сообщения с логином
-            // string login = messageText;
-            // 
-            // Console.WriteLine($"login: {login}");
-
-            return;
-        }
+        return;
+    }
+    if (update.Type == UpdateType.CallbackQuery)
+    {
+        await HandleCallbackQuery(bot, update.CallbackQuery);
+        return;
     }
 
 }
+async Task HandleMesssage(ITelegramBotClient bot, Message message)
+{
+    
+
+    if (message.Text == "/start")
+    {
+        await bot.SendTextMessageAsync(
+        message.Chat.Id,
+        $"<code>🤖 BOT: </code> " +
+        $"<b>Привет {message.From.FirstName} 👋</b>" +
+        $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
+        replyMarkup: Logger(),
+        parseMode: ParseMode.Html);
+
+        return;
+    }
+    if (message.Text.StartsWith("login"))
+    {
+        loginState = 1; // установить состояние на "ожидание логина"
+        await bot.SendTextMessageAsync(
+         message.Chat.Id,
+         $"<code>🤖 BOT:</code><b> Придумай логин: </b> ",
+         parseMode: ParseMode.Html
+         );
+        return;
+    }
+    if (message.Text.StartsWith("password"))
+    {
+        loginState = 2;
+        await bot.SendTextMessageAsync(
+        message.Chat.Id,
+        $"<code>🤖 BOT:</code><b> Придумай пароль: </b> ",
+        parseMode: ParseMode.Html
+        );
+        return;
+    }
+    if (message.Text.StartsWith("date"))
+    {
+        loginState = 3;
+        await bot.SendTextMessageAsync(
+        message.Chat.Id,
+        $"<code>🤖 BOT:</code><b> Введите дату рождения: </b> ",
+        parseMode: ParseMode.Html
+        );
+        return;
+    }
+
+    // состояние бота 
+    if (loginState == 1) // пользователь вводит логин
+    {
+        string login = message.Text;
+        Console.WriteLine($"login = {login}");
+        await bot.SendTextMessageAsync(message.Chat.Id, $"Логин сохранен: {login}");
+        loginState = 0; // вернуться в начальное состояние
+        return;
+    }
+    if (loginState == 2) // пользователь вводит пароль
+    {
+        string password = message.Text;
+        Console.WriteLine($"password = {password}");
+        await bot.SendTextMessageAsync(message.Chat.Id, $"Пароль сохранен: {password}");
+        loginState = 0; // вернуться в начальное состояние
+        return;
+    }
+    if (loginState == 3) // пользователь вводит дату
+    {
+        string date = message.Text;
+        Console.WriteLine($"date = {date}");
+        await bot.SendTextMessageAsync(message.Chat.Id, $"Дата сохранена: {date}");
+        loginState = 0; // вернуться в начальное состояние
+        return;
+    }
+    
+        await bot.SendTextMessageAsync(message.Chat.Id, $"Это HandleMesssage {message.Text}");
+    return;
+}
+async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
+{
+    await bot.SendTextMessageAsync(callback.Message.Chat.Id,$"Нажал {callback.Data}");
+    return;
+}
+
+
+
+
+
+
+
+
 
 async Task HandleStartCommand(ITelegramBotClient bot, long userId, string firstName)
 {
@@ -91,10 +203,6 @@ async Task HandleLogin(ITelegramBotClient bot, Update update, long userId)
          $"<code>🤖 BOT:</code><b> Придумай логин: </b> ",
          parseMode: ParseMode.Html
          );
-
-    string login = update.Message.Text;
-
-    Console.WriteLine($"login: {login}");
 
     // удаление сообщения  await bot.DeleteMessageAsync(userId, sentMessage.MessageId, Token);
 }
@@ -464,10 +572,11 @@ static IReplyMarkup Logger()
 
     //-----------------------------//
 
-    ReplyKeyboardMarkup Logger_menu = new(new[]
-      {
-    new KeyboardButton[] { batton_Logger_login, batton_Logger_password },
-     new KeyboardButton[] { batton_Logger_Date},
+    ReplyKeyboardMarkup Logger_menu = new
+        (new[]
+    {
+        new KeyboardButton[] { batton_Logger_login, batton_Logger_password },
+        new KeyboardButton[] { batton_Logger_Date},
     }
       )
     {
@@ -490,7 +599,3 @@ Task Error(ITelegramBotClient botClient,Exception exception,
     Console.WriteLine(ErrorMessage);
     return Task.CompletedTask;
 }
-
-
-
-
