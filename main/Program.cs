@@ -10,6 +10,8 @@ using static main.Status;
 using main;
 using System.Threading;
 using Telegram.Bot.Requests;
+using System.Globalization;
+using Microsoft.Win32;
 
 
 // Подключаем бота через свой API key
@@ -35,7 +37,15 @@ ReceiverOptions receiverOptions = new()
  */
 
 
-int loginState = 0; // начальное состояние
+//int loginState = 0; // начальное состояние
+
+Status status = Status.defaul;
+
+List<main.User> users = new List<main.User>();
+
+// Создаем новый экземпляр класса User
+main.User user = new main.User();
+
 
 
 bot.StartReceiving(
@@ -84,6 +94,8 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
 
         // обработка сообщений
         await HandleMesssage(bot, update.Message);
+        user.UserTgid = $"{userID}";
+        
 
         return;
     }
@@ -97,7 +109,6 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
 async Task HandleMesssage(ITelegramBotClient bot, Message message)
 {
     
-
     if (message.Text == "/start")
     {
         await bot.SendTextMessageAsync(
@@ -112,7 +123,9 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
     }
     if (message.Text.StartsWith("login"))
     {
-        loginState = 1; // установить состояние на "ожидание логина"
+        status = login;
+
+        //loginState = 1; // установить состояние на "ожидание логина"
         await bot.SendTextMessageAsync(
          message.Chat.Id,
          $"<code>🤖 BOT:</code><b> Придумай логин: </b> ",
@@ -122,7 +135,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
     }
     if (message.Text.StartsWith("password"))
     {
-        loginState = 2;
+        //loginState = 2;
+        status = password;
         await bot.SendTextMessageAsync(
         message.Chat.Id,
         $"<code>🤖 BOT:</code><b> Придумай пароль: </b> ",
@@ -132,7 +146,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
     }
     if (message.Text.StartsWith("date"))
     {
-        loginState = 3;
+        //loginState = 3;
+        status = date;
         await bot.SendTextMessageAsync(
         message.Chat.Id,
         $"<code>🤖 BOT:</code><b> Введите дату рождения: </b> ",
@@ -140,34 +155,84 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
         );
         return;
     }
+    if (message.Text.StartsWith("Проверка"))
+    {
+
+        if (string.IsNullOrEmpty(user.UserTgid) ||
+            string.IsNullOrEmpty(user.Login) ||
+            string.IsNullOrEmpty(user.Password))
+        {
+            await bot.SendTextMessageAsync(message.Chat.Id,
+                "Не все данные были введены, повторите попытку");
+            return;
+        }
+        else
+        {
+            // добавляем объект User в список пользователей
+            await bot.SendTextMessageAsync(message.Chat.Id,
+                "Регистрация прошла успешно!",replyMarkup: Top_menu());
+            users.Add(user);
+            status = defaul;
+            return;
+        }
+        return;
+    }    
 
     // состояние бота 
-    if (loginState == 1) // пользователь вводит логин
+    if (status is login) // пользователь вводит логин
     {
         string login = message.Text;
+        
+        user.Login = login;
+       
         Console.WriteLine($"login = {login}");
-        await bot.SendTextMessageAsync(message.Chat.Id, $"Логин сохранен: {login}");
-        loginState = 0; // вернуться в начальное состояние
+        await bot.SendTextMessageAsync(message.Chat.Id,
+            $"Логин сохранен: {login}", replyMarkup: Logger());
+        //loginState = 0; // вернуться в начальное состояние
+        status = defaul;
         return;
     }
-    if (loginState == 2) // пользователь вводит пароль
+    if (status is password) // пользователь вводит пароль
     {
         string password = message.Text;
+        user.Password = password;
         Console.WriteLine($"password = {password}");
-        await bot.SendTextMessageAsync(message.Chat.Id, $"Пароль сохранен: {password}");
-        loginState = 0; // вернуться в начальное состояние
+        await bot.SendTextMessageAsync(message.Chat.Id,
+            $"Пароль сохранен: {password}", replyMarkup: Logger());
+        // loginState = 0; // вернуться в начальное состояние
+        status = defaul;
         return;
     }
-    if (loginState == 3) // пользователь вводит дату
+    if (status is date) // пользователь вводит дату
     {
+        // преобразовываем строку из даты
         string date = message.Text;
-        Console.WriteLine($"date = {date}");
-        await bot.SendTextMessageAsync(message.Chat.Id, $"Дата сохранена: {date}");
-        loginState = 0; // вернуться в начальное состояние
-        return;
+        string format = "dd.MM.yyyy";
+        DateTime dateTime;
+
+        if (DateTime.TryParseExact(date, format, null,
+            DateTimeStyles.None, out dateTime))
+        {
+            Console.WriteLine($"date = {dateTime}");
+            await bot.SendTextMessageAsync(message.Chat.Id,
+                $"Дата сохранена: {dateTime.ToString(format)}",
+                replyMarkup: Logger());
+            user.Date = dateTime;
+            status = defaul;
+            return;
+        }
+        else
+        {
+            await bot.SendTextMessageAsync(message.Chat.Id,
+                "Некорректный формат даты. Попробуйте еще раз.",
+                replyMarkup: Logger());
+            status = defaul;
+            return;
+        }
     }
-    
-        await bot.SendTextMessageAsync(message.Chat.Id, $"Это HandleMesssage {message.Text}");
+
+
+    await bot.SendTextMessageAsync(message.Chat.Id, $"Это HandleMesssage {message.Text}");
     return;
 }
 async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
@@ -569,6 +634,8 @@ static IReplyMarkup Logger()
         = "password";
     KeyboardButton batton_Logger_Date
         = "date";
+    KeyboardButton batton_Logger_Rgistry_check =
+        "Проверка";
 
     //-----------------------------//
 
@@ -576,7 +643,7 @@ static IReplyMarkup Logger()
         (new[]
     {
         new KeyboardButton[] { batton_Logger_login, batton_Logger_password },
-        new KeyboardButton[] { batton_Logger_Date},
+        new KeyboardButton[] { batton_Logger_Date, batton_Logger_Rgistry_check},
     }
       )
     {
