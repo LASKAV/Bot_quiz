@@ -7,11 +7,13 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using static main.User;
 using static main.Status;
+using static main.EmptyStruct;
 using main;
 using System.Threading;
 using Telegram.Bot.Requests;
 using System.Globalization;
 using Microsoft.Win32;
+using System.Runtime.ConstrainedExecution;
 
 
 // Подключаем бота через свой API key
@@ -36,17 +38,19 @@ ReceiverOptions receiverOptions = new()
 //bot.SetMyCommandsAsync(commands);
  */
 
-
 //int loginState = 0; // начальное состояние
 
 Status status = Status.defaul;
-
+EmptyStruct empty = new EmptyStruct();
 List<main.User> users = new List<main.User>();
+var db = new DatabaseMongoDB();
+
 
 // Создаем новый экземпляр класса User
 main.User user = new main.User();
 
-
+// удаление сообщения  await bot.DeleteMessageAsync(userId,
+// sentMessage.MessageId, Token);
 
 bot.StartReceiving(
     updateHandler: Update,
@@ -81,6 +85,7 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
     if (update.Type == UpdateType.Message &&
         update?.Message?.Text != null)
     {
+
         var userID = update.Message.Chat.Id;
         var messageText = update.Message.Text;
         var firstName = update.Message.From.FirstName;
@@ -95,8 +100,7 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
         // обработка сообщений
         await HandleMesssage(bot, update.Message);
         user.UserTgid = $"{userID}";
-        
-
+       
         return;
     }
     if (update.Type == UpdateType.CallbackQuery)
@@ -108,20 +112,37 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
 }
 async Task HandleMesssage(ITelegramBotClient bot, Message message)
 {
-    
-    if (message.Text == "/start")
-    {
-        await bot.SendTextMessageAsync(
-        message.Chat.Id,
-        $"<code>🤖 BOT: </code> " +
-        $"<b>Привет {message.From.FirstName} 👋</b>" +
-        $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
-        replyMarkup: Logger(),
-        parseMode: ParseMode.Html);
+    var user_cek = db.GetUserByUserID(user.UserTgid);
 
-        return;
+    if (user_cek is null)
+    {
+        
+        if (message.Text == "/start")
+        {
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT: </code> " +
+            $"<b>Привет {message.From.FirstName} 👋</b>" +
+            $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
+            replyMarkup: Logger(),
+            parseMode: ParseMode.Html);
+            return;
+        }
     }
-    if (message.Text.StartsWith("login"))
+    else
+    {
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            empty.MainOffice,
+            replyMarkup: Top_menu(),
+            parseMode: ParseMode.Html
+            );
+        status = defaul;
+            return;
+    }
+
+    // кнопки 
+    if (message.Text.StartsWith("1⃣ Логин"))
     {
         status = login;
 
@@ -133,7 +154,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
          );
         return;
     }
-    if (message.Text.StartsWith("password"))
+    if (message.Text.StartsWith("2⃣ Пароль"))
     {
         //loginState = 2;
         status = password;
@@ -144,7 +165,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
         );
         return;
     }
-    if (message.Text.StartsWith("date"))
+    if (message.Text.StartsWith("3⃣ Дата рождения"))
     {
         //loginState = 3;
         status = date;
@@ -155,7 +176,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
         );
         return;
     }
-    if (message.Text.StartsWith("Проверка"))
+    if (message.Text.StartsWith("4⃣ Проверка ✅"))
     {
 
         if (string.IsNullOrEmpty(user.UserTgid) ||
@@ -163,47 +184,63 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             string.IsNullOrEmpty(user.Password))
         {
             await bot.SendTextMessageAsync(message.Chat.Id,
-                "Не все данные были введены, повторите попытку");
+                $"<code>🤖 BOT:</code>" +
+                "<b> Не все данные были введены, повторите попытку 🚫</b>",
+                 parseMode: ParseMode.Html,
+                 replyMarkup: Logger());
             return;
         }
         else
         {
             // добавляем объект User в список пользователей
             await bot.SendTextMessageAsync(message.Chat.Id,
-                "Регистрация прошла успешно!",replyMarkup: Top_menu());
+                $"<code>🤖 BOT: </code> " +
+                "<b>Регистрация прошла успешно!✅</b>",
+                parseMode: ParseMode.Html);
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            empty.MainOffice,
+            replyMarkup: Top_menu(),
+            parseMode: ParseMode.Html
+            );
             users.Add(user);
+            db.InsertUser(user.UserTgid, user.Date, user.Login, user.Password);
             status = defaul;
             return;
         }
-        return;
-    }    
-
+    }
     // состояние бота 
-    if (status is login) // пользователь вводит логин
+    if (status is login) 
     {
         string login = message.Text;
-        
+
         user.Login = login;
-       
+
         Console.WriteLine($"login = {login}");
         await bot.SendTextMessageAsync(message.Chat.Id,
-            $"Логин сохранен: {login}", replyMarkup: Logger());
+             $"<code>🤖 BOT: </code> " +
+            $"<b>Логин сохранен: {login}✅ </b>",
+             replyMarkup: Logger(),
+             parseMode: ParseMode.Html);
         //loginState = 0; // вернуться в начальное состояние
         status = defaul;
         return;
-    }
-    if (status is password) // пользователь вводит пароль
+    }// пользователь вводит логин
+    if (status is password) 
     {
         string password = message.Text;
         user.Password = password;
         Console.WriteLine($"password = {password}");
         await bot.SendTextMessageAsync(message.Chat.Id,
-            $"Пароль сохранен: {password}", replyMarkup: Logger());
+             $"<code>🤖 BOT: </code> " +
+            $"<b>Пароль сохранен: {password}✅</b>",
+             replyMarkup: Logger(),
+             parseMode: ParseMode.Html);
         // loginState = 0; // вернуться в начальное состояние
         status = defaul;
         return;
-    }
-    if (status is date) // пользователь вводит дату
+    }// пользователь вводит пароль
+    if (status is date) 
     {
         // преобразовываем строку из даты
         string date = message.Text;
@@ -215,8 +252,10 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
         {
             Console.WriteLine($"date = {dateTime}");
             await bot.SendTextMessageAsync(message.Chat.Id,
-                $"Дата сохранена: {dateTime.ToString(format)}",
-                replyMarkup: Logger());
+                $"<code>🤖 BOT: </code> " +
+                $"<b>Дата сохранена: {dateTime.ToString(format)}✅</b>",
+                replyMarkup: Logger(),
+                parseMode: ParseMode.Html);
             user.Date = dateTime;
             status = defaul;
             return;
@@ -224,283 +263,28 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
         else
         {
             await bot.SendTextMessageAsync(message.Chat.Id,
-                "Некорректный формат даты. Попробуйте еще раз.",
-                replyMarkup: Logger());
+                $"<code>🤖 BOT: </code> " +
+                "<b>Некорректный формат даты. Попробуйте еще раз.🚫</b>" +
+                $"<b>\nПример: </b> <code> 12.12.2012 </code> ",
+                replyMarkup: Logger(),
+                parseMode: ParseMode.Html);
             status = defaul;
             return;
         }
-    }
+    }// пользователь вводит дату
 
-
-    await bot.SendTextMessageAsync(message.Chat.Id, $"Это HandleMesssage {message.Text}");
+    await bot.SendTextMessageAsync(message.Chat.Id,
+        $"Это HandleMesssage {message.Text}");
+    status = defaul;
     return;
 }
 async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
 {
-    await bot.SendTextMessageAsync(callback.Message.Chat.Id,$"Нажал {callback.Data}");
+    await bot.SendTextMessageAsync(callback.Message.Chat.Id, $"Нажал {callback.Data}");
     return;
 }
 
-
-
-
-
-
-
-
-
-async Task HandleStartCommand(ITelegramBotClient bot, long userId, string firstName)
-{
-    // Отправляем сообщение приветствия
-    Message sentMessage = await bot.SendTextMessageAsync(
-        userId,
-        $"<code>🤖 BOT: </code> " +
-        $"<b>Привет {firstName} 👋</b>" +
-        $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
-        replyMarkup: Logger(),
-        parseMode: ParseMode.Html);
-
-}
-async Task HandleLogin(ITelegramBotClient bot, Update update, long userId)
-{
-    Message sentMessage =  await bot.SendTextMessageAsync(
-         userId,
-         $"<code>🤖 BOT:</code><b> Придумай логин: </b> ",
-         parseMode: ParseMode.Html
-         );
-
-    // удаление сообщения  await bot.DeleteMessageAsync(userId, sentMessage.MessageId, Token);
-}
-async Task GetUpdates(ITelegramBotClient bot)
-{
-    int offset = 0;
-    while (true)
-    {
-        var updates = await bot.GetUpdatesAsync
-            (offset: offset, allowedUpdates: new[] { UpdateType.Message });
-        foreach (var update in updates)
-        {
-            // обработка полученного сообщения
-            if (update.Message != null)
-            {
-                Console.WriteLine($"Получил текстовое сообщение от" +
-                    $" {update.Message.Chat.Id}: {update.Message.Text}");
-            }
-
-            // увеличиваем offset, чтобы не получать те же сообщения снова
-            offset = update.Id + 1;
-        }
-    }
-}
 /*
- // if (message.Text == "/start")
-// {
-//     Console.WriteLine($"message.Text =  {message.Text}");
-// 
-//     await bot.SendTextMessageAsync(
-//         message.Chat.Id,
-//         $"<code>🤖 BOT: </code> " +
-//         $"<b>Привет {message.Chat.FirstName} 👋</b>" +
-//         $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
-//         replyMarkup: Logger(),
-//         parseMode: ParseMode.Html
-//         );
-// }
-// if (message.Text == "login")
-// {
-//     await bot.SendTextMessageAsync(
-//          message.Chat.Id,
-//          $"<code>🤖 BOT:</code><b> Придумай логин: </b> ",
-//          parseMode: ParseMode.Html
-//          );
-//     login = message.Text;
-//     Console.WriteLine($"login: {login}");
-// }
-// // if (message.Text == "password")
-//     {
-//         await bot.SendTextMessageAsync(
-//             message.Chat.Id,
-//             $"<code>🤖 BOT:</code><b> Придумай пароль: </b> ",
-//             parseMode: ParseMode.Html
-//             );
-//     password = message.Text;
-//     Console.WriteLine($"login: {password}");
-// }
-
-
-// if (message.Text == "date")
-// {
-//     await bot.SendTextMessageAsync(
-//         message.Chat.Id,
-//         $"<code>🤖 BOT:</code><b> Введи дату рождения: </b> ",
-//         parseMode: ParseMode.Html
-//         );
-//    
-// }
-// else
-// {
-//     string day = null;
-//     day = message.Text;
-//     month = 11;
-//     year = 2001;
-// 
-//     Console.WriteLine($"date: {new DateTime(year, month, day)}");
-// }
-
- */
-async Task Login(ITelegramBotClient bot, Update update, CancellationToken Token)
-{
-    string login = null;
-    var user = new main.User();
-
-    var message = update.Message;
-
-
-    login = message.Text;
-    Console.WriteLine($"login = {login}");
-
-
-    user.Login = login;
-    user.Show_user();
-
-    Password(bot, update, Token);
-}
-async Task Password
-    (ITelegramBotClient bot, Update update, CancellationToken Token)
-{
-    var user = new main.User();
-    string password = null;
-
-    var message = update.Message;
-
-    await bot.SendTextMessageAsync(
-        message.Chat.Id,
-        $"<code>🤖 BOT:</code><b> Придумай пароль: </b> ",
-        parseMode: ParseMode.Html
-        );
-
-    password = message.Text;
-    Console.WriteLine($"password =  {password}");
-
-    user.Password = password;
-    user.Show_user();
-}
-/*
- *  var message = update.Message;
-
-    Console.WriteLine(
-        $"user_id: {message.Chat.Id}" +
-        $"\nuser_mess: {message.Text}"
-        );
-
-    int day = 21;
-    int month = 11;
-    int year = 2001;
-    string login = null;
-    string password = null;
-    
-    if (message.Text is not null)
-    {
-        if (message.Text == "/start")
-        {
-            Console.WriteLine($"message.Text =  {message.Text}");
-
-            await bot.SendTextMessageAsync(
-                message.Chat.Id,
-                $"<code>🤖 BOT: </code> " +
-                $"<b>Привет {message.Chat.FirstName} 👋</b>" +
-                $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
-                parseMode: ParseMode.Html
-                );
-            await bot.SendTextMessageAsync(
-                 message.Chat.Id,
-                 $"<code>🤖 BOT:</code><b> Придумай логин: </b> ",
-                 parseMode: ParseMode.Html
-                 );
-        }
-        else
-        {
-            Console.WriteLine($"message.Text =  {message.Text}");
-
-            login = message.Text;
-
-
-         //   await bot.SendTextMessageAsync(
-         //       message.Chat.Id,
-         //       $"<code>🤖 BOT:</code><b> Придумай пароль: </b> ",
-         //       parseMode: ParseMode.Html
-         //       );
-
-            if (login is not null)
-            {
-                Console.WriteLine($"message.Text =  {message.Text}");
-
-                password = message.Text;
-
-                var user = new main.User
-                (message.Chat.Id.ToString(),
-                new DateTime(year, month, day),
-                login,
-                "523asd");
-
-                user.Show_user();
-
-            }
-        }
-    }
-
-    //if (message.Chat.Username is null)
-    //{
-    //    await bot.SendTextMessageAsync(
-    //    message.Chat.Id,
-    //    $"\n\n<b>🎉 Добро пожаловать на викторину 🎉</b>" +
-    //    $"\n\n    <b>🎲ИГРА🎲</b>" +
-    //    $"\n\n<b>Доступно 4 раздела викторины:</b>" +
-    //    $"\n\n<b>1️⃣ 💂‍♀️История👩‍🚀 </b>" +
-    //    $"\n\n<b>2️⃣ 🏛География✈️ </b>" +
-    //    $"\n\n<b>3️⃣ 🔬Биология🦠</b>" +
-    //    $"\n\n<b>4️⃣ 👽Смешанная👀</b>" +
-    //    $"\n\n<b>🏆Награды🏆</b>" +
-    //    $"\n\n<b>🥇 20 - 18 правильных ответов</b>" +
-    //    $"\n\n<b>🥈 17 - 11 правильных ответов</b>" +
-    //    $"\n\n<b>🥉 10 - 1 правильных ответов</b>" +
-    //    $"\n\n    <b>📈Статистика📉</b>" +
-    //    $"\n\n<b>1️⃣ Результаты прошлых викторин </b>" +
-    //    $"\n\n<b>2️⃣ ТОП - 20 по разделам </b>" +
-    //    $"\n\n    <b>⚙️Настройки⚙️</b>" +
-    //    $"\n\n<b>Смена пароля</b>" +
-    //    $"\n\n<b>Смена даты рождения</b>",
-    //    replyMarkup: Top_menu(),
-    //    parseMode: ParseMode.Html
-    //    );
-    //    return;
-    //}
-    //else
-    //{
-    //    await bot.SendTextMessageAsync(
-    //    message.Chat.Id,
-    //    $"\n\n<b>🎉 Добро пожаловать на викторину 🎉</b>" +
-    //    $"\n\n    <b>🎲ИГРА🎲</b>" +
-    //    $"\n\n<b>Доступно 4 раздела викторины:</b>" +
-    //    $"\n\n<b>1️⃣ 💂‍♀️История👩‍🚀 </b>" +
-    //    $"\n\n<b>2️⃣ 🏛География✈️ </b>" +
-    //    $"\n\n<b>3️⃣ 🔬Биология🦠</b>" +
-    //    $"\n\n<b>4️⃣ 👽Смешанная👀</b>" +
-    //    $"\n\n<b>🏆Награды🏆</b>" +
-    //    $"\n\n<b>🥇 20 - 18 правильных ответов</b>" +
-    //    $"\n\n<b>🥈 17 - 11 правильных ответов</b>" +
-    //    $"\n\n<b>🥉 10 - 1 правильных ответов</b>" +
-    //    $"\n\n    <b>📈Статистика📉</b>" +
-    //    $"\n\n<b>1️⃣ Результаты прошлых викторин </b>" +
-    //    $"\n\n<b>2️⃣ ТОП - 20 по разделам </b>" +
-    //    $"\n\n    <b>⚙️Настройки⚙️</b>" +
-    //    $"\n\n<b>1️⃣ Смена пароля</b>" +
-    //    $"\n\n<b>2️⃣ Смена даты рождения</b>",
-    //    replyMarkup: Top_menu(),
-    //    parseMode: ParseMode.Html
-    //    );
-    //    return;
-    //}
     if (message.Text == "🎲 Играть 🎲")
     {
         await bot.SendTextMessageAsync(
@@ -534,6 +318,7 @@ async Task Password
             parseMode: ParseMode.Html);
     }
  */
+
 static IReplyMarkup Top_menu()
 {
     //-----------------------------//
@@ -629,13 +414,13 @@ static IReplyMarkup Logger()
 {
     //-----------------------------//
     KeyboardButton batton_Logger_login
-        = "login";
+        = "1⃣ Логин ";
     KeyboardButton batton_Logger_password
-        = "password";
+        = "2⃣ Пароль ";
     KeyboardButton batton_Logger_Date
-        = "date";
-    KeyboardButton batton_Logger_Rgistry_check =
-        "Проверка";
+        = "3⃣ Дата рождения ";
+    KeyboardButton batton_Logger_Rgistry_check
+         = "4⃣ Проверка ✅ ";
 
     //-----------------------------//
 
@@ -653,7 +438,7 @@ static IReplyMarkup Logger()
     return Logger_menu;
 }
 
-Task Error(ITelegramBotClient botClient,Exception exception,
+Task Error(ITelegramBotClient botClient, Exception exception,
     CancellationToken cancellationToken)
 {
     var ErrorMessage = exception switch
