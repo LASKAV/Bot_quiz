@@ -65,20 +65,6 @@ Console.WriteLine($"Запус бота @{me.Username}");
 Console.ReadLine();
 cts.Cancel();
 
-/*
- //async Task CallbackQueryHandler(ITelegramBotClient bot, CallbackQuery query)
-//{
-//    string buttonText = query.Data;
-//    string name = $"{query.From.FirstName} {query.From.LastName}";
-//    Console.WriteLine($"{name} нажал кнопку {buttonText}");
-//
-//    await bot.AnswerCallbackQueryAsync
-//        (query.Id, $"Вы нажали кнопку {buttonText}");
-//}
-//
- */
-
-
 async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
 {
     
@@ -126,6 +112,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
             replyMarkup: Logger(),
             parseMode: ParseMode.Html);
+            status = defaul;
             return;
         }
     }
@@ -146,7 +133,6 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
     {
         status = login;
 
-        //loginState = 1; // установить состояние на "ожидание логина"
         await bot.SendTextMessageAsync(
          message.Chat.Id,
          $"<code>🤖 BOT:</code><b> Придумай логин: </b> ",
@@ -156,7 +142,6 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
     }
     if (message.Text.StartsWith("2⃣ Пароль"))
     {
-        //loginState = 2;
         status = password;
         await bot.SendTextMessageAsync(
         message.Chat.Id,
@@ -167,7 +152,6 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
     }
     if (message.Text.StartsWith("3⃣ Дата рождения"))
     {
-        //loginState = 3;
         status = date;
         await bot.SendTextMessageAsync(
         message.Chat.Id,
@@ -222,7 +206,6 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             $"<b>Логин сохранен: {login}✅ </b>",
              replyMarkup: Logger(),
              parseMode: ParseMode.Html);
-        //loginState = 0; // вернуться в начальное состояние
         status = defaul;
         return;
     }// пользователь вводит логин
@@ -236,7 +219,6 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             $"<b>Пароль сохранен: {password}✅</b>",
              replyMarkup: Logger(),
              parseMode: ParseMode.Html);
-        // loginState = 0; // вернуться в начальное состояние
         status = defaul;
         return;
     }// пользователь вводит пароль
