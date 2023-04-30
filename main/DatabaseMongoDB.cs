@@ -41,11 +41,11 @@ namespace main
         var user = new BsonDocument {
             { "UserID", UserTgid },
             { "Login",  Login },
-            { "Password ", Password },
+            { "Password", Password },
             { "Age", bsonDate},
             { "Points", 0}
             };
-
+            
             _usersCollection.InsertOne(user);
             // index для UserID 
             var indexKeysDefinition =
@@ -68,8 +68,58 @@ namespace main
                 Console.WriteLine($"UserID: {userID} не найден");
                 Console.ResetColor();
             }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"UserID: {userID} найден");
+                Console.ResetColor();
+            }
 
             return user;
+        }
+
+        // новый пароль
+        public void UpdateUserPassword(string userID, string newPassword)
+        {
+            var filter = Builders<BsonDocument>.Filter.Eq("UserID", userID);
+            var update = Builders<BsonDocument>.Update.Set("Password", newPassword);
+
+            var result = _usersCollection.UpdateOne(filter, update);
+
+            if (result.ModifiedCount == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Не удалось обновить пароль для" +
+                    $" пользователя с идентификатором UserID {userID}");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"Обновление пароля для" +
+                    $" пользователя с идентификатором UserID {userID}");
+                Console.ResetColor();
+            }
+        }
+        public void UpdateUserDate(string userID, DateTime date)
+        {
+            var filter = Builders<BsonDocument>.Filter.Eq("UserID", userID);
+            var update = Builders<BsonDocument>.Update.Set("Age", date);
+            var result = _usersCollection.UpdateOne(filter, update);
+            if (result.ModifiedCount == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Не удалось обновить дату для" +
+                    $" пользователя с идентификатором UserID {userID}");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"Обновление даты для" +
+                    $" пользователя с идентификатором UserID {userID}");
+                Console.ResetColor();
+            }
         }
     }
 

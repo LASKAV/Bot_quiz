@@ -83,10 +83,20 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
             $"\nfirstName: {firstName}" +
             $"\nlastName: {lastName}");
 
-        // обработка сообщений
-        await HandleMesssage(bot, update.Message);
         user.UserTgid = $"{userID}";
-       
+
+        if (db.GetUserByUserID(user.UserTgid) == null)
+        {
+            await HandleMesssageLogger(bot, update.Message);
+            return;
+        }
+        else
+        {
+            await HandleMesssage(bot, update.Message);
+            return;
+        }
+         
+        Console.WriteLine("Update");
         return;
     }
     if (update.Type == UpdateType.CallbackQuery)
@@ -96,39 +106,20 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
     }
 
 }
-async Task HandleMesssage(ITelegramBotClient bot, Message message)
+async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
 {
-    var user_cek = db.GetUserByUserID(user.UserTgid);
-
-    if (user_cek is null)
+    if (message.Text.StartsWith("/start"))
     {
-        
-        if (message.Text == "/start")
-        {
-            await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT: </code> " +
-            $"<b>Привет {message.From.FirstName} 👋</b>" +
-            $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
-            replyMarkup: Logger(),
-            parseMode: ParseMode.Html);
-            status = defaul;
-            return;
-        }
-    }
-    else
-    {
-            await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            empty.MainOffice,
-            replyMarkup: Top_menu(),
-            parseMode: ParseMode.Html
-            );
+        await bot.SendTextMessageAsync(
+        message.Chat.Id,
+        $"<code>🤖 BOT: </code> " +
+        $"<b>Привет {message.From.FirstName} 👋</b>" +
+        $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
+        replyMarkup: Logger(),
+        parseMode: ParseMode.Html);
         status = defaul;
-            return;
+        return;
     }
-
-    // кнопки 
     if (message.Text.StartsWith("1⃣ Логин"))
     {
         status = login;
@@ -193,8 +184,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             return;
         }
     }
-    // состояние бота 
-    if (status is login) 
+
+    if (status is login)
     {
         string login = message.Text;
 
@@ -208,8 +199,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
              parseMode: ParseMode.Html);
         status = defaul;
         return;
-    }// пользователь вводит логин
-    if (status is password) 
+    }    // пользователь вводит логин
+    if (status is password)
     {
         string password = message.Text;
         user.Password = password;
@@ -221,8 +212,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
              parseMode: ParseMode.Html);
         status = defaul;
         return;
-    }// пользователь вводит пароль
-    if (status is date) 
+    } // пользователь вводит пароль
+    if (status is date)
     {
         // преобразовываем строку из даты
         string date = message.Text;
@@ -253,11 +244,128 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             status = defaul;
             return;
         }
-    }// пользователь вводит дату
+    }     // пользователь вводит дату
+
+    await bot.SendTextMessageAsync(
+        message.Chat.Id,
+        $"<code>🤖 BOT: </code> " +
+        $"<b>Привет {message.From.FirstName} 👋</b>" +
+        $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
+        replyMarkup: Logger(),
+        parseMode: ParseMode.Html);
+    status = defaul;
+    return;
+
+}
+async Task HandleMesssage(ITelegramBotClient bot, Message message)
+{
+    if (message.Text.StartsWith("/start"))
+    { 
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            empty.MainOffice,
+            replyMarkup: Top_menu(),
+            parseMode: ParseMode.Html
+            );
+            status = defaul;
+            return;
+    }
+    // кнопки
+    if (message.Text.StartsWith("🛠 Настройки 🛠"))
+    {
+        status = settings;
+        await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code><b> Выбери раздел 🛠 </b>",
+            replyMarkup: Settings_menu(),
+            parseMode: ParseMode.Html);
+        return;
+    }
+    if (message.Text.StartsWith("🔙 Назад 🔙"))
+    {
+        status = defaul;
+        await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code><b> назад  🚀 </b>",
+            replyMarkup: Top_menu(),
+            parseMode: ParseMode.Html);
+    }
+
+    // состояние бота 
+    if (status is settings)    // пользователь в menu settings
+    {
+        Console.WriteLine($"Status:{settings}");
+        if (message.Text.StartsWith("🔧 Смена пароля 🔧"))
+        {
+            status = passwordChang;
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code><b> Введите новый пароль: </b> ",
+            parseMode: ParseMode.Html
+            );
+            return;
+        }
+        if (message.Text.StartsWith("👶 Смена даты рождения 👶"))
+        {
+            status = birthdayСhange;
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code><b> Введите новую дату рождения: </b> ",
+            parseMode: ParseMode.Html
+            );
+            return;
+        }
+
+       // UpdateUserDate
+
+    }
+    if (status is birthdayСhange)
+    {
+        string date = message.Text;
+        string format = "dd.MM.yyyy";
+        DateTime dateTime;
+
+        if (DateTime.TryParseExact(date, format, null,
+            DateTimeStyles.None, out dateTime))
+        {
+            Console.WriteLine($"date = {dateTime}");
+            await bot.SendTextMessageAsync(message.Chat.Id,
+                $"<code>🤖 BOT: </code> " +
+                $"<b>Дата сохранена: {dateTime.ToString(format)}✅</b>",
+                replyMarkup: Settings_menu(),
+                parseMode: ParseMode.Html);
+            db.UpdateUserDate(user.UserTgid, dateTime);
+            status = settings;
+            return;
+        }
+        else
+        {
+            await bot.SendTextMessageAsync(message.Chat.Id,
+                $"<code>🤖 BOT: </code> " +
+                "<b>Некорректный формат даты. Попробуйте еще раз.🚫</b>" +
+                $"<b>\nПример: </b> <code> 12.12.2012 </code> ",
+                replyMarkup: Settings_menu(),
+                parseMode: ParseMode.Html);
+            status = settings;
+            return;
+        }
+    }
+    if (status is passwordChang) // пользователь новый пароль
+    {
+        string newPassword = message.Text;
+        db.UpdateUserPassword(user.UserTgid, newPassword);
+        await bot.SendTextMessageAsync(
+        message.Chat.Id,
+        $"<code>🤖 BOT:</code><b> Пароль был изменен на {newPassword}✅</b> ",
+        parseMode: ParseMode.Html
+        );
+
+        status = settings;
+        return;
+    }
 
     await bot.SendTextMessageAsync(message.Chat.Id,
         $"Это HandleMesssage {message.Text}");
-    status = defaul;
     return;
 }
 async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
@@ -306,7 +414,7 @@ static IReplyMarkup Top_menu()
     //-----------------------------//
     KeyboardButton batton_top_game = "🎲 Играть 🎲";
     KeyboardButton batton_top_stat = "📈 Статистика 📉";
-    KeyboardButton batton_top_settings = "⚙️ Настройки ⚙️";
+    KeyboardButton batton_top_settings = "🛠 Настройки 🛠";
     //-----------------------------//
 
     ReplyKeyboardMarkup Top_menu = new(new[]
