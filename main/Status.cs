@@ -11,7 +11,9 @@ namespace main
         registry_check = 4,
         settings = 5,
         birthdayСhange = 6,
-        passwordChang = 7
+        passwordChang = 7,
+        game = 8,
+        gameHistory = 9
     }
 }
 

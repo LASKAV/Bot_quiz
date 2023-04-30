@@ -271,6 +271,16 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             return;
     }
     // кнопки
+    if (message.Text.StartsWith("🎮 Играть 🎮"))
+    {
+        status = game;
+        await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code><b> Выбери викторину 🔮 </b>",
+            replyMarkup: Game_menu(),
+            parseMode: ParseMode.Html);
+        return;
+    }
     if (message.Text.StartsWith("🛠 Настройки 🛠"))
     {
         status = settings;
@@ -289,6 +299,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             $"<code>🤖 BOT:</code><b> назад  🚀 </b>",
             replyMarkup: Top_menu(),
             parseMode: ParseMode.Html);
+        return;
     }
 
     // состояние бота 
@@ -318,6 +329,26 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
 
        // UpdateUserDate
 
+    }
+    if (status is game)
+    {
+        Console.WriteLine($"Status:{game}");
+        if (message.Text.StartsWith("💂‍♀️ История 👩‍🚀"))
+        {
+            status = gameHistory;
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> Вы выбрали раздел 💂‍♀️ История 👩‍🚀 </b>\n" +
+            empty.Awards,
+            parseMode: ParseMode.Html
+            );
+
+            return;
+        }
+            
+
+        
     }
     if (status is birthdayСhange)
     {
@@ -363,6 +394,12 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
         status = settings;
         return;
     }
+    if (status is gameHistory)
+    {
+
+        status = game;
+        return;
+    }
 
     await bot.SendTextMessageAsync(message.Chat.Id,
         $"Это HandleMesssage {message.Text}");
@@ -391,28 +428,12 @@ async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
             replyMarkup: Statistics_menu(),
             parseMode: ParseMode.Html);
     }
-    if (message.Text == "⚙️ Настройки ⚙️")
-    {
-        await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code><b> Выбери раздел 🛠 </b>",
-            replyMarkup: Settings_menu(),
-            parseMode: ParseMode.Html);
-    }
-    if (message.Text == "🔙 Назад 🔙")
-    {
-        await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code><b> назад  🚀 </b>",
-            replyMarkup: Top_menu(),
-            parseMode: ParseMode.Html);
-    }
  */
 
 static IReplyMarkup Top_menu()
 {
     //-----------------------------//
-    KeyboardButton batton_top_game = "🎲 Играть 🎲";
+    KeyboardButton batton_top_game = "🎮 Играть 🎮";
     KeyboardButton batton_top_stat = "📈 Статистика 📉";
     KeyboardButton batton_top_settings = "🛠 Настройки 🛠";
     //-----------------------------//
