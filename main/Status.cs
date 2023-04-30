@@ -13,7 +13,8 @@ namespace main
         birthdayСhange = 6,
         passwordChang = 7,
         game = 8,
-        gameHistory = 9
+        gameHistory = 9,
+        gemeAnswer = 10
     }
 }
 

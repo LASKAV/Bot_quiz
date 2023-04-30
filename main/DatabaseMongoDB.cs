@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using DnsClient;
 using Microsoft.VisualBasic;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using Telegram.Bot.Types;
 using ThirdParty.Json.LitJson;
 
 namespace main
 {
-
     public class DatabaseMongoDB
     {
         private readonly IMongoCollection<BsonDocument> _usersCollection;
@@ -21,7 +22,6 @@ namespace main
             _usersCollection = database.GetCollection<BsonDocument>("users");
             _usersHistory = database.GetCollection<BsonDocument>("users_history");
             _history_questions = database.GetCollection<BsonDocument>("history_questions");
-            HistoryQuestions();
 
             //_usersCollection = database.GetCollection<BsonDocument>("geography_questions");
             //_usersCollection = database.GetCollection<BsonDocument>("biology_questions");
@@ -40,7 +40,6 @@ namespace main
 
             _usersCollection.InsertOne(user);
         }
-
         // добавить user
         public void InsertUser(string UserTgid, DateTime
             Date, string Login, string Password)
@@ -129,7 +128,6 @@ namespace main
                 Console.ResetColor();
             }
         }
-
         // вопросы для History
         public void HistoryQuestions()
         {
@@ -254,7 +252,7 @@ namespace main
                     {"id", 20},
                     {"question", "Какой президент Украины был свергнут в результате Революции достоинства 2014 года?"},
                     {"answer", "Виктор Янукович"}
-                },
+                }
             };
 
             _history_questions.InsertMany(questions);
@@ -264,6 +262,47 @@ namespace main
                 new CreateIndexModel<BsonDocument>(indexKeysDefinition);
             _history_questions.Indexes.CreateOne(indexModel);
         }
+        // вопросы 
+        public List<BsonDocument> GetRandomQuestionsFromDb(int count)
+        {
+            var filter = Builders<BsonDocument>.Filter.Empty;
+            var questions = _history_questions.Find(filter).ToList();
+
+            var random = new Random();
+            var selectedQuestions = questions.OrderBy(q => random.Next()).Take(count).ToList();
+
+            var randomCollection = new List<BsonDocument>();
+            foreach (var question in selectedQuestions)
+            {
+                var randomQuestion = new BsonDocument();
+                randomQuestion.Add("id", question["id"]);
+                randomQuestion.Add("question", question["question"]);
+                randomQuestion.Add("answer", question["answer"]);
+                randomCollection.Add(randomQuestion);
+            }
+
+            return randomCollection;
+        }
+        // провкрка ответа 
+        public bool CheckAnswer(int questionId, string userAnswer)
+        {
+            // Создаем фильтр для поиска вопроса по id
+            var filter = Builders<BsonDocument>.Filter.Eq("id", questionId);
+
+            // Выполняем запрос к базе данных и извлекаем первый результат
+            var question = _history_questions.Find(filter).FirstOrDefault();
+
+            // Проверяем, совпадает ли ответ пользователя с правильным ответом в базе данных
+            if (question != null && userAnswer.ToLower() == question["answer"].ToString().ToLower())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
 
     }
 }

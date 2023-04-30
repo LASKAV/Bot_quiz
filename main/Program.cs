@@ -14,6 +14,7 @@ using Telegram.Bot.Requests;
 using System.Globalization;
 using Microsoft.Win32;
 using System.Runtime.ConstrainedExecution;
+using MongoDB.Bson;
 
 
 // Подключаем бота через свой API key
@@ -44,6 +45,7 @@ Status status = Status.defaul;
 EmptyStruct empty = new EmptyStruct();
 List<main.User> users = new List<main.User>();
 var db = new DatabaseMongoDB();
+var questions = db.GetRandomQuestionsFromDb(5);
 
 
 // Создаем новый экземпляр класса User
@@ -270,15 +272,16 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             status = defaul;
             return;
     }
+
     // кнопки
     if (message.Text.StartsWith("🎮 Играть 🎮"))
     {
-        status = game;
         await bot.SendTextMessageAsync(
             message.Chat.Id,
             $"<code>🤖 BOT:</code><b> Выбери викторину 🔮 </b>",
             replyMarkup: Game_menu(),
             parseMode: ParseMode.Html);
+        status = game;
         return;
     }
     if (message.Text.StartsWith("🛠 Настройки 🛠"))
@@ -305,7 +308,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
     // состояние бота 
     if (status is settings)    // пользователь в menu settings
     {
-        Console.WriteLine($"Status:{settings}");
+        Console.WriteLine($"Status:{status}");
         if (message.Text.StartsWith("🔧 Смена пароля 🔧"))
         {
             status = passwordChang;
@@ -326,29 +329,6 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             );
             return;
         }
-
-       // UpdateUserDate
-
-    }
-    if (status is game)
-    {
-        Console.WriteLine($"Status:{game}");
-        if (message.Text.StartsWith("💂‍♀️ История 👩‍🚀"))
-        {
-            status = gameHistory;
-            await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code>" +
-            $"<b> Вы выбрали раздел 💂‍♀️ История 👩‍🚀 </b>\n" +
-            empty.Awards,
-            parseMode: ParseMode.Html
-            );
-
-            return;
-        }
-            
-
-        
     }
     if (status is birthdayСhange)
     {
@@ -394,17 +374,102 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
         status = settings;
         return;
     }
+
+    if (status is game)
+    {
+        if (message.Text.StartsWith("💂‍♀️ История 👩‍🚀"))
+        {
+            status = gameHistory;
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> Вы выбрали раздел 💂‍♀️ История 👩‍🚀 </b>\n" +
+            empty.Awards,
+            replyMarkup: Geme_History_start(),
+            parseMode: ParseMode.Html
+            ) ;
+            return;
+        }
+    }
+    
     if (status is gameHistory)
     {
+        questions = db.GetRandomQuestionsFromDb(5);
+        Console.WriteLine($"Status: {status}");
 
+        foreach (var question in questions)
+        {
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b>Вопрос {question["question"]} </b>\n",
+            parseMode: ParseMode.Html,
+            replyMarkup: Geme_History_Answer()
+            );
+            Console.WriteLine($"ID вопроса {question["id"]}");
+
+            status = gemeAnswer;
+            return;
+        }
+
+        await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b>Игра окончена! </b>\n",
+            parseMode: ParseMode.Html,
+            replyMarkup: Game_menu()
+            );
         status = game;
         return;
     }
+    if (status is gemeAnswer)
+    {
+        string answer = message.Text;
+        foreach (var question in questions)
+        {
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b>Ответ: {answer} </b>\n",
+            parseMode: ParseMode.Html,
+            replyMarkup: Geme_History_process()
+            );
+            int indexq = (int)question["id"];
+            Console.WriteLine($"ID ответа {indexq}");
+            Console.WriteLine($"Вопрос {question["question"]}");
+
+           if(db.CheckAnswer(indexq, answer))
+           {
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b>Правильно! </b>\n",
+                parseMode: ParseMode.Html
+                );
+                status = gameHistory;
+                return;
+           }
+           else
+           {
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b>Неправильно! Правильный ответ: {question["answer"]} </b>\n",
+                parseMode: ParseMode.Html
+                );
+                status = gameHistory;
+                return;
+           }
+        }
+        return;
+    }
+
 
     await bot.SendTextMessageAsync(message.Chat.Id,
         $"Это HandleMesssage {message.Text}");
     return;
 }
+
 async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
 {
     await bot.SendTextMessageAsync(callback.Message.Chat.Id, $"Нажал {callback.Data}");
@@ -412,14 +477,6 @@ async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
 }
 
 /*
-    if (message.Text == "🎲 Играть 🎲")
-    {
-        await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code><b> Выбери викторину 🔮 </b>",
-            replyMarkup: Game_menu(),
-            parseMode: ParseMode.Html);
-    }
     if (message.Text == "📈 Статистика 📉")
     {
         await bot.SendTextMessageAsync(
@@ -548,7 +605,73 @@ static IReplyMarkup Logger()
 
     return Logger_menu;
 }
+static IReplyMarkup Geme_History_start()
+{
+    KeyboardButton batton_Logger_login
+        = "Начать игру ";
+    KeyboardButton batton_Logger_
+        = "🔙 Назад 🔙 ";
 
+    //-----------------------------//
+
+    ReplyKeyboardMarkup Logger_menu = new
+        (new[]
+    {
+        new KeyboardButton[] { batton_Logger_login},
+        new KeyboardButton[] { batton_Logger_, },
+    }
+      )
+    {
+        ResizeKeyboard = true
+    };
+
+    return Logger_menu;
+}
+static IReplyMarkup Geme_History_Answer()
+{
+    KeyboardButton batton_Logger_login
+        = "Ответ 1";
+    KeyboardButton batton_Logger_
+        = "Ответ 2";
+    KeyboardButton batton_Logger_ds
+        = "🔙 Назад 🔙 ";
+
+    //-----------------------------//
+
+    ReplyKeyboardMarkup Logger_menu = new
+        (new[]
+    {
+        new KeyboardButton[] { batton_Logger_login,batton_Logger_},
+        new KeyboardButton[] { batton_Logger_ds, },
+    }
+      )
+    {
+        ResizeKeyboard = true
+    };
+
+    return Logger_menu;
+}
+static IReplyMarkup Geme_History_process()
+{
+    KeyboardButton batton_Logger_login
+        = "Дальше";
+    KeyboardButton batton_Logger_
+        = "Отсановить игру";
+
+    //-----------------------------//
+
+    ReplyKeyboardMarkup Logger_menu = new
+        (new[]
+    {
+        new KeyboardButton[] { batton_Logger_login,batton_Logger_},
+    }
+      )
+    {
+        ResizeKeyboard = true
+    };
+
+    return Logger_menu;
+}
 Task Error(ITelegramBotClient botClient, Exception exception,
     CancellationToken cancellationToken)
 {
