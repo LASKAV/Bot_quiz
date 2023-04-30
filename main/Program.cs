@@ -15,6 +15,8 @@ using System.Globalization;
 using Microsoft.Win32;
 using System.Runtime.ConstrainedExecution;
 using MongoDB.Bson;
+using System.Data;
+using System.Runtime.InteropServices;
 
 
 // Подключаем бота через свой API key
@@ -39,14 +41,11 @@ ReceiverOptions receiverOptions = new()
 //bot.SetMyCommandsAsync(commands);
  */
 
-//int loginState = 0; // начальное состояние
-
 Status status = Status.defaul;
 EmptyStruct empty = new EmptyStruct();
 List<main.User> users = new List<main.User>();
 var db = new DatabaseMongoDB();
 var questions = db.GetRandomQuestionsFromDb(5);
-
 
 // Создаем новый экземпляр класса User
 main.User user = new main.User();
@@ -85,7 +84,12 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
             $"\nfirstName: {firstName}" +
             $"\nlastName: {lastName}");
 
-        user.UserTgid = $"{userID}";
+         user.UserTgid = $"{userID}";
+
+        // users.Add(new main.User
+        // {
+        //     UserTgid = $"{userID}"
+        // });
 
         if (db.GetUserByUserID(user.UserTgid) == null)
         {
@@ -192,7 +196,10 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
         string login = message.Text;
 
         user.Login = login;
-
+        // users.Add(new main.User
+        // {
+        //     Login = $"{login}"
+        // });
         Console.WriteLine($"login = {login}");
         await bot.SendTextMessageAsync(message.Chat.Id,
              $"<code>🤖 BOT: </code> " +
@@ -206,6 +213,12 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
     {
         string password = message.Text;
         user.Password = password;
+
+       // users.Add(new main.User
+       // {
+       //     Password = $"{password}"
+       // });
+
         Console.WriteLine($"password = {password}");
         await bot.SendTextMessageAsync(message.Chat.Id,
              $"<code>🤖 BOT: </code> " +
@@ -232,6 +245,12 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
                 replyMarkup: Logger(),
                 parseMode: ParseMode.Html);
             user.Date = dateTime;
+
+            // users.Add(new main.User
+            // {
+            //     Date = dateTime
+            // });
+
             status = defaul;
             return;
         }
@@ -391,10 +410,16 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             return;
         }
     }
-    
+
     if (status is gameHistory)
     {
-        questions = db.GetRandomQuestionsFromDb(5);
+        questions = db.GetRandomQuestionsFromDb(20);
+
+        // foreach (var item in questions)
+        // {
+        //     Console.WriteLine(item);
+        // }
+        db.UpdateQuestions(user.UserTgid);
         Console.WriteLine($"Status: {status}");
 
         foreach (var question in questions)
@@ -402,16 +427,17 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             await bot.SendTextMessageAsync(
             message.Chat.Id,
             $"<code>🤖 BOT:</code>" +
-            $"<b>Вопрос {question["question"]} </b>\n",
+            $"<b> Вопрос {question["question"]} </b>\n",
             parseMode: ParseMode.Html,
-            replyMarkup: Geme_History_Answer()
+            replyMarkup:Geme_History_Answer
+            (question["answer"].ToString(), question["badQuestion1"].ToString(),
+            question["badQuestion2"].ToString(), question["badQuestion3"].ToString())
             );
             Console.WriteLine($"ID вопроса {question["id"]}");
-
             status = gemeAnswer;
             return;
         }
-
+        
         await bot.SendTextMessageAsync(
             message.Chat.Id,
             $"<code>🤖 BOT:</code>" +
@@ -430,7 +456,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             await bot.SendTextMessageAsync(
             message.Chat.Id,
             $"<code>🤖 BOT:</code>" +
-            $"<b>Ответ: {answer} </b>\n",
+            $"<b> Ответ: {answer} </b>\n",
             parseMode: ParseMode.Html,
             replyMarkup: Geme_History_process()
             );
@@ -440,10 +466,11 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
 
            if(db.CheckAnswer(indexq, answer))
            {
+                db.UpdatePoint(user.UserTgid);
                 await bot.SendTextMessageAsync(
                 message.Chat.Id,
                 $"<code>🤖 BOT:</code>" +
-                $"<b>Правильно! </b>\n",
+                $"<b> Правильно ✅ </b>\n",
                 parseMode: ParseMode.Html
                 );
                 status = gameHistory;
@@ -454,7 +481,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
                 await bot.SendTextMessageAsync(
                 message.Chat.Id,
                 $"<code>🤖 BOT:</code>" +
-                $"<b>Неправильно! Правильный ответ: {question["answer"]} </b>\n",
+                $"<b>Неправильно ❌</b>" +
+                $"\n<b>Правильный ответ: {question["answer"]} </b>\n",
                 parseMode: ParseMode.Html
                 );
                 status = gameHistory;
@@ -469,13 +497,11 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
         $"Это HandleMesssage {message.Text}");
     return;
 }
-
 async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
 {
     await bot.SendTextMessageAsync(callback.Message.Chat.Id, $"Нажал {callback.Data}");
     return;
 }
-
 /*
     if (message.Text == "📈 Статистика 📉")
     {
@@ -486,7 +512,6 @@ async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
             parseMode: ParseMode.Html);
     }
  */
-
 static IReplyMarkup Top_menu()
 {
     //-----------------------------//
@@ -627,30 +652,32 @@ static IReplyMarkup Geme_History_start()
 
     return Logger_menu;
 }
-static IReplyMarkup Geme_History_Answer()
+static IReplyMarkup Geme_History_Answer
+    (string question1, string question2, string question3, string question4)
 {
-    KeyboardButton batton_Logger_login
-        = "Ответ 1";
-    KeyboardButton batton_Logger_
-        = "Ответ 2";
-    KeyboardButton batton_Logger_ds
-        = "🔙 Назад 🔙 ";
+    Random rnd = new Random();
 
-    //-----------------------------//
+    List<string> options = new List<string>() { question1, question2, question3, question4 };
+    options = options.OrderBy(x => rnd.Next()).ToList(); // перемешиваем варианты ответов
 
-    ReplyKeyboardMarkup Logger_menu = new
-        (new[]
+    KeyboardButton button1 = $"{options[0]}";
+    KeyboardButton button2 = $"{options[1]}";
+    KeyboardButton button3 = $"{options[2]}";
+    KeyboardButton button4 = $"{options[3]}";
+    //KeyboardButton backButton = "🔙 Назад 🔙";
+
+    ReplyKeyboardMarkup keyboard = new(new[]
     {
-        new KeyboardButton[] { batton_Logger_login,batton_Logger_},
-        new KeyboardButton[] { batton_Logger_ds, },
-    }
-      )
+        new KeyboardButton[] { button1, button2 },
+        new KeyboardButton[] { button3, button4 },
+    })
     {
         ResizeKeyboard = true
     };
 
-    return Logger_menu;
+    return keyboard;
 }
+
 static IReplyMarkup Geme_History_process()
 {
     KeyboardButton batton_Logger_login
