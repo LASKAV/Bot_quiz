@@ -48,7 +48,7 @@ namespace main
             { "UserID", UserTgid },
             { "Login",  Login },
             { "Password", Password },
-            { "Age", bsonDate},
+            { "Age", Date},
             { "Points", 0},
             { "Questions", 0 }
             };

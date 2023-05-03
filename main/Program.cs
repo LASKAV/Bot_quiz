@@ -17,6 +17,8 @@ using System.Runtime.ConstrainedExecution;
 using MongoDB.Bson;
 using System.Data;
 using System.Runtime.InteropServices;
+using System.Net.Sockets;
+using System.Collections.Generic;
 
 
 // Подключаем бота через свой API key
@@ -43,15 +45,19 @@ ReceiverOptions receiverOptions = new()
 
 Status status = Status.defaul;
 EmptyStruct empty = new EmptyStruct();
-List<main.User> users = new List<main.User>();
+
 var db = new DatabaseMongoDB();
 var questions = db.GetRandomQuestionsFromDb(5);
 
 // Создаем новый экземпляр класса User
-main.User user = new main.User();
+
 
 // удаление сообщения  await bot.DeleteMessageAsync(userId,
 // sentMessage.MessageId, Token);
+
+List<main.User> users = new List<main.User>();
+
+
 
 bot.StartReceiving(
     updateHandler: Update,
@@ -84,14 +90,8 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
             $"\nfirstName: {firstName}" +
             $"\nlastName: {lastName}");
 
-         user.UserTgid = $"{userID}";
 
-        // users.Add(new main.User
-        // {
-        //     UserTgid = $"{userID}"
-        // });
-
-        if (db.GetUserByUserID(user.UserTgid) == null)
+        if (db.GetUserByUserID($"{userID}") == null)
         {
             await HandleMesssageLogger(bot, update.Message);
             return;
@@ -114,8 +114,14 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
 }
 async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
 {
+    main.User user = new main.User();
+    
+    user.UserTgid = $"{message.From.Id}";
+    Console.WriteLine($"{message.From.Id}");
+
     if (message.Text.StartsWith("/start"))
     {
+        user.UserTgid = $"{message.From.Id}";
         await bot.SendTextMessageAsync(
         message.Chat.Id,
         $"<code>🤖 BOT: </code> " +
@@ -169,6 +175,7 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
                 "<b> Не все данные были введены, повторите попытку 🚫</b>",
                  parseMode: ParseMode.Html,
                  replyMarkup: Logger());
+            user.Show_user();
             return;
         }
         else
@@ -184,7 +191,9 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
             replyMarkup: Top_menu(),
             parseMode: ParseMode.Html
             );
-            users.Add(user);
+
+            user.Show_user();
+
             db.InsertUser(user.UserTgid, user.Date, user.Login, user.Password);
             status = defaul;
             return;
@@ -194,12 +203,8 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
     if (status is login)
     {
         string login = message.Text;
-
         user.Login = login;
-        // users.Add(new main.User
-        // {
-        //     Login = $"{login}"
-        // });
+
         Console.WriteLine($"login = {login}");
         await bot.SendTextMessageAsync(message.Chat.Id,
              $"<code>🤖 BOT: </code> " +
@@ -213,11 +218,6 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
     {
         string password = message.Text;
         user.Password = password;
-
-       // users.Add(new main.User
-       // {
-       //     Password = $"{password}"
-       // });
 
         Console.WriteLine($"password = {password}");
         await bot.SendTextMessageAsync(message.Chat.Id,
@@ -245,11 +245,6 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
                 replyMarkup: Logger(),
                 parseMode: ParseMode.Html);
             user.Date = dateTime;
-
-            // users.Add(new main.User
-            // {
-            //     Date = dateTime
-            // });
 
             status = defaul;
             return;
@@ -364,7 +359,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
                 $"<b>Дата сохранена: {dateTime.ToString(format)}✅</b>",
                 replyMarkup: Settings_menu(),
                 parseMode: ParseMode.Html);
-            db.UpdateUserDate(user.UserTgid, dateTime);
+            db.UpdateUserDate($"{message.From.Id}", dateTime);
             status = settings;
             return;
         }
@@ -383,7 +378,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
     if (status is passwordChang) // пользователь новый пароль
     {
         string newPassword = message.Text;
-        db.UpdateUserPassword(user.UserTgid, newPassword);
+        db.UpdateUserPassword($"{message.From.Id}", newPassword);
         await bot.SendTextMessageAsync(
         message.Chat.Id,
         $"<code>🤖 BOT:</code><b> Пароль был изменен на {newPassword}✅</b> ",
@@ -410,7 +405,6 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
             return;
         }
     }
-
     if (status is gameHistory)
     {
         questions = db.GetRandomQuestionsFromDb(20);
@@ -419,7 +413,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
         // {
         //     Console.WriteLine(item);
         // }
-        db.UpdateQuestions(user.UserTgid);
+        db.UpdateQuestions($"{message.From.Id}");
         Console.WriteLine($"Status: {status}");
 
         foreach (var question in questions)
@@ -466,7 +460,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message)
 
            if(db.CheckAnswer(indexq, answer))
            {
-                db.UpdatePoint(user.UserTgid);
+                db.UpdatePoint($"{message.From.Id}");
                 await bot.SendTextMessageAsync(
                 message.Chat.Id,
                 $"<code>🤖 BOT:</code>" +
