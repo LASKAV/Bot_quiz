@@ -48,16 +48,7 @@ EmptyStruct empty = new EmptyStruct();
 
 var db = new DatabaseMongoDB();
 var questions = db.GetRandomQuestionsFromDb(5);
-
-// Создаем новый экземпляр класса User
-
-
-// удаление сообщения  await bot.DeleteMessageAsync(userId,
-// sentMessage.MessageId, Token);
-
-List<main.User> users = new List<main.User>();
-
-
+Dictionary<string, main.User> users = new Dictionary<string, main.User>();
 
 bot.StartReceiving(
     updateHandler: Update,
@@ -93,8 +84,11 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
 
         if (db.GetUserByUserID($"{userID}") == null)
         {
-            await HandleMesssageLogger(bot, update.Message);
-            return;
+            if (!users.TryAdd($"{userID}", new main.User()))
+            {
+                await HandleMesssageLogger(bot, update.Message, $"{userID}");
+                return;
+            }
         }
         else
         {
@@ -112,16 +106,25 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
     }
 
 }
-async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
+async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string user_id)
 {
-    main.User user = new main.User();
-    
-    user.UserTgid = $"{message.From.Id}";
-    Console.WriteLine($"{message.From.Id}");
-
+    if (users.ContainsKey(user_id))
+    {
+        users[user_id].UserTgid = $"{user_id}";
+        Console.WriteLine(user_id);
+        Console.WriteLine("Mои пользователи: \n");
+        foreach (KeyValuePair<string, main.User> user in users)
+        {
+            Console.WriteLine($"User ID: {user.Key}");
+            Console.WriteLine($"UserTgid: {user.Value.UserTgid}");
+            Console.WriteLine($"Login: {user.Value.Login}");
+            Console.WriteLine($"Password: {user.Value.Password}");
+            Console.WriteLine($"Date: {user.Value.Date}\n");
+        }
+    }
     if (message.Text.StartsWith("/start"))
     {
-        user.UserTgid = $"{message.From.Id}";
+
         await bot.SendTextMessageAsync(
         message.Chat.Id,
         $"<code>🤖 BOT: </code> " +
@@ -165,101 +168,142 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message)
     }
     if (message.Text.StartsWith("4⃣ Проверка ✅"))
     {
-
-        if (string.IsNullOrEmpty(user.UserTgid) ||
-            string.IsNullOrEmpty(user.Login) ||
-            string.IsNullOrEmpty(user.Password))
+        string user_ID = message.Chat.Id.ToString();
+        if (users.ContainsKey(user_id))
         {
-            await bot.SendTextMessageAsync(message.Chat.Id,
+            Console.WriteLine("ПРОВЕРКА: \n");
+
+            Console.WriteLine("_________________________");
+
+            Console.WriteLine($"User ID: {user_id}");
+            Console.WriteLine($"UserTgid: {users[user_id].UserTgid}");
+            Console.WriteLine($"Login: {users[user_id].Login}");
+            Console.WriteLine($"Password: {users[user_id].Password}");
+            Console.WriteLine($"Date: {users[user_id].Date}\n");
+
+            Console.WriteLine("_________________________");
+            if (!string.IsNullOrEmpty(users[user_id].UserTgid) &&
+                !string.IsNullOrEmpty(users[user_id].Login) &&
+                !string.IsNullOrEmpty(users[user_id].Password) &&
+                users[user_id].Date != DateTime.MinValue)
+            {
+              // добавляем объект User в список пользователей
+               await bot.SendTextMessageAsync(message.Chat.Id,
+                      $"<code>🤖 BOT: </code> " +
+                      "<b>Регистрация прошла успешно!✅</b>",
+                      parseMode: ParseMode.Html);
+               await bot.SendTextMessageAsync(
+                  message.Chat.Id,
+                  empty.MainOffice,
+                  replyMarkup: Top_menu(),
+                  parseMode: ParseMode.Html
+                  );
+
+               db.InsertUser(
+                   users[user_id].UserTgid,
+                   users[user_id].Date,
+                   users[user_id].Login,
+                   users[user_id].Password);
+
+               status = defaul;
+               return;
+            }
+            else
+            {
+                await bot.SendTextMessageAsync(message.Chat.Id,
                 $"<code>🤖 BOT:</code>" +
                 "<b> Не все данные были введены, повторите попытку 🚫</b>",
-                 parseMode: ParseMode.Html,
-                 replyMarkup: Logger());
-            user.Show_user();
-            return;
-        }
-        else
-        {
-            // добавляем объект User в список пользователей
-            await bot.SendTextMessageAsync(message.Chat.Id,
-                $"<code>🤖 BOT: </code> " +
-                "<b>Регистрация прошла успешно!✅</b>",
-                parseMode: ParseMode.Html);
-            await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            empty.MainOffice,
-            replyMarkup: Top_menu(),
-            parseMode: ParseMode.Html
-            );
+                parseMode: ParseMode.Html,
+                replyMarkup: Logger());
 
-            user.Show_user();
+                return;
+            }
 
-            db.InsertUser(user.UserTgid, user.Date, user.Login, user.Password);
-            status = defaul;
-            return;
-        }
+        }    
     }
 
     if (status is login)
     {
         string login = message.Text;
-        user.Login = login;
+        string user_ID = message.Chat.Id.ToString();
 
-        Console.WriteLine($"login = {login}");
-        await bot.SendTextMessageAsync(message.Chat.Id,
-             $"<code>🤖 BOT: </code> " +
-            $"<b>Логин сохранен: {login}✅ </b>",
-             replyMarkup: Logger(),
-             parseMode: ParseMode.Html);
-        status = defaul;
-        return;
+        if (users.ContainsKey(user_id))
+        {
+            Console.WriteLine($"login = {login}");
+            await bot.SendTextMessageAsync(message.Chat.Id,
+                 $"<code>🤖 BOT: </code> " +
+                $"<b>Логин сохранен: {login}✅ </b>",
+                 replyMarkup: Logger(),
+                 parseMode: ParseMode.Html);
+
+            users[user_id].Login = login;
+
+            status = defaul;
+            return;
+        }
+
+            
     }    // пользователь вводит логин
     if (status is password)
     {
         string password = message.Text;
-        user.Password = password;
+        string user_ID = message.Chat.Id.ToString();
 
-        Console.WriteLine($"password = {password}");
-        await bot.SendTextMessageAsync(message.Chat.Id,
-             $"<code>🤖 BOT: </code> " +
-            $"<b>Пароль сохранен: {password}✅</b>",
-             replyMarkup: Logger(),
-             parseMode: ParseMode.Html);
-        status = defaul;
-        return;
+        if (users.ContainsKey(user_id))
+        {
+            Console.WriteLine($"password = {password}");
+            await bot.SendTextMessageAsync(message.Chat.Id,
+                 $"<code>🤖 BOT: </code> " +
+                $"<b>Пароль сохранен: {password}✅</b>",
+                 replyMarkup: Logger(),
+                 parseMode: ParseMode.Html);
+
+            users[user_id].Password = password;
+
+            status = defaul;
+            return;
+        }
+           
     } // пользователь вводит пароль
     if (status is date)
     {
         // преобразовываем строку из даты
         string date = message.Text;
         string format = "dd.MM.yyyy";
-        DateTime dateTime;
+        string user_ID = message.Chat.Id.ToString();
 
-        if (DateTime.TryParseExact(date, format, null,
-            DateTimeStyles.None, out dateTime))
+        if (users.ContainsKey(user_id))
         {
-            Console.WriteLine($"date = {dateTime}");
-            await bot.SendTextMessageAsync(message.Chat.Id,
-                $"<code>🤖 BOT: </code> " +
-                $"<b>Дата сохранена: {dateTime.ToString(format)}✅</b>",
-                replyMarkup: Logger(),
-                parseMode: ParseMode.Html);
-            user.Date = dateTime;
+            DateTime dateTime;
 
-            status = defaul;
-            return;
+            if (DateTime.TryParseExact(date, format, null,
+                DateTimeStyles.None, out dateTime))
+            {
+                Console.WriteLine($"date = {dateTime}");
+                await bot.SendTextMessageAsync(message.Chat.Id,
+                    $"<code>🤖 BOT: </code> " +
+                    $"<b>Дата сохранена: {dateTime.ToString(format)}✅</b>",
+                    replyMarkup: Logger(),
+                    parseMode: ParseMode.Html);
+
+                users[user_id].Date = dateTime;
+
+                status = defaul;
+                return;
+            }
+            else
+            {
+                await bot.SendTextMessageAsync(message.Chat.Id,
+                    $"<code>🤖 BOT: </code> " +
+                    "<b>Некорректный формат даты. Попробуйте еще раз.🚫</b>" +
+                    $"<b>\nПример: </b> <code> 12.12.2012 </code> ",
+                    replyMarkup: Logger(),
+                    parseMode: ParseMode.Html);
+                status = defaul;
+                return;
+            }
         }
-        else
-        {
-            await bot.SendTextMessageAsync(message.Chat.Id,
-                $"<code>🤖 BOT: </code> " +
-                "<b>Некорректный формат даты. Попробуйте еще раз.🚫</b>" +
-                $"<b>\nПример: </b> <code> 12.12.2012 </code> ",
-                replyMarkup: Logger(),
-                parseMode: ParseMode.Html);
-            status = defaul;
-            return;
-        }
+            
     }     // пользователь вводит дату
 
     await bot.SendTextMessageAsync(

@@ -11,7 +11,7 @@
           "Microsoft.NETCore.App": "2.2.8",
           "MongoDB.Driver": "2.19.1",
           "Newtonsoft.Json": "13.0.3",
-          "Telegram.Bot": "18.0.0",
+          "Telegram.Bot": "19.0.0",
           "Telegram.Bot.Extensions.Markup": "1.0.1",
           "Telegram.Bot.Extensions.Passport": "1.0.0",
           "Telegram.Bot.InteractivityHelper": "1.5.0"
@@ -192,20 +192,20 @@
         }
       },
       "System.Security.Principal.Windows/5.0.0": {},
-      "Telegram.Bot/18.0.0": {
+      "Telegram.Bot/19.0.0": {
         "dependencies": {
           "Newtonsoft.Json": "13.0.3"
         },
         "runtime": {
-          "lib/netcoreapp3.1/Telegram.Bot.dll": {
-            "assemblyVersion": "18.0.0.0",
-            "fileVersion": "18.0.0.0"
+          "lib/net6.0/Telegram.Bot.dll": {
+            "assemblyVersion": "19.0.0.0",
+            "fileVersion": "19.0.0.0"
           }
         }
       },
       "Telegram.Bot.Extensions.Markup/1.0.1": {
         "dependencies": {
-          "Telegram.Bot": "18.0.0"
+          "Telegram.Bot": "19.0.0"
         },
         "runtime": {
           "lib/net6.0/Telegram.Bot.Extensions.Markup.dll": {
@@ -216,7 +216,7 @@
       },
       "Telegram.Bot.Extensions.Passport/1.0.0": {
         "dependencies": {
-          "Telegram.Bot": "18.0.0"
+          "Telegram.Bot": "19.0.0"
         },
         "runtime": {
           "lib/netstandard2.0/Telegram.Bot.Extensions.Passport.dll": {
@@ -227,7 +227,7 @@
       },
       "Telegram.Bot.InteractivityHelper/1.5.0": {
         "dependencies": {
-          "Telegram.Bot": "18.0.0"
+          "Telegram.Bot": "19.0.0"
         },
         "runtime": {
           "lib/netcoreapp2.2/Interactivity.dll": {
@@ -413,12 +413,12 @@
       "path": "system.security.principal.windows/5.0.0",
       "hashPath": "system.security.principal.windows.5.0.0.nupkg.sha512"
     },
-    "Telegram.Bot/18.0.0": {
+    "Telegram.Bot/19.0.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-BD0UchUXINymCGS+1O1tv2enCRyv+VbSJQAgfnueTZs3j7K4XXyJyW0CgyJleTrqB1oq1hS1ux6gBpi3Ajp+ZQ==",
-      "path": "telegram.bot/18.0.0",
-      "hashPath": "telegram.bot.18.0.0.nupkg.sha512"
+      "sha512": "sha512-Q16IOitgjGoaJOuqgKQy0FeF+hr/ncmlX2esrhCC7aiyhSX7roYEriWaGAHkQZR8QzbImjFfl4eQh2IxcnOrPg==",
+      "path": "telegram.bot/19.0.0",
+      "hashPath": "telegram.bot.19.0.0.nupkg.sha512"
     },
     "Telegram.Bot.Extensions.Markup/1.0.1": {
       "type": "package",

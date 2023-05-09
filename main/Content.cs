@@ -1,4 +1,8 @@
 ﻿using System;
+using main;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+
 namespace main
 {
     public struct EmptyStruct
@@ -33,4 +37,3 @@ namespace main
         }
     }
 }
-

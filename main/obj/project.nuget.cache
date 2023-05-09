@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "kmQtQWyQx0PxivSNdixMEYZ6xYc7GQnqJSFUtR6rRTIxqash5h2xfGqFXWCuIEnTDSwuQ5M5uYnMHTTqM5QT8w==",
+  "dgSpecHash": "mNlCSURuvGq0r7PRNMOBgXFt9zvXFy9qrQUzB90zh085vP5e1wqAv2sxK52MWCr2AJzAugujDhClPGdQmKI/ig==",
   "success": true,
   "projectFilePath": "/Users/laskav/Projects/bot/Bot_quiz/main/main.csproj",
   "expectedPackageFiles": [
@@ -27,7 +27,7 @@
     "/Users/laskav/.nuget/packages/system.runtime.compilerservices.unsafe/5.0.0/system.runtime.compilerservices.unsafe.5.0.0.nupkg.sha512",
     "/Users/laskav/.nuget/packages/system.security.accesscontrol/5.0.0/system.security.accesscontrol.5.0.0.nupkg.sha512",
     "/Users/laskav/.nuget/packages/system.security.principal.windows/5.0.0/system.security.principal.windows.5.0.0.nupkg.sha512",
-    "/Users/laskav/.nuget/packages/telegram.bot/18.0.0/telegram.bot.18.0.0.nupkg.sha512",
+    "/Users/laskav/.nuget/packages/telegram.bot/19.0.0/telegram.bot.19.0.0.nupkg.sha512",
     "/Users/laskav/.nuget/packages/telegram.bot.extensions.markup/1.0.1/telegram.bot.extensions.markup.1.0.1.nupkg.sha512",
     "/Users/laskav/.nuget/packages/telegram.bot.extensions.passport/1.0.0/telegram.bot.extensions.passport.1.0.0.nupkg.sha512",
     "/Users/laskav/.nuget/packages/telegram.bot.interactivityhelper/1.5.0/telegram.bot.interactivityhelper.1.5.0.nupkg.sha512",
