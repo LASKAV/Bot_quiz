@@ -7,6 +7,7 @@ namespace main
         public DateTime Date { get; set; }
         public string Login { get; set; }
         public string Password { get; set; }
+        public Status Status { get; set; }
 
         public User() { }
 

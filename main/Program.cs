@@ -48,6 +48,7 @@ EmptyStruct empty = new EmptyStruct();
 
 var db = new DatabaseMongoDB();
 var questions = db.GetRandomQuestionsFromDb(5);
+
 Dictionary<string, main.User> users = new Dictionary<string, main.User>();
 
 bot.StartReceiving(
@@ -92,10 +93,14 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
         }
         else
         {
-            await HandleMesssage(bot, update.Message);
-            return;
+            if (!users.TryAdd($"{userID}", new main.User()))
+            {
+                await HandleMesssage(bot, update.Message, $"{userID}");
+                return;
+            }
+                
         }
-         
+
         Console.WriteLine("Update");
         return;
     }
@@ -120,11 +125,11 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
             Console.WriteLine($"Login: {user.Value.Login}");
             Console.WriteLine($"Password: {user.Value.Password}");
             Console.WriteLine($"Date: {user.Value.Date}\n");
+            Console.WriteLine($"Status: {user.Value.Status}\n");
         }
     }
     if (message.Text.StartsWith("/start"))
     {
-
         await bot.SendTextMessageAsync(
         message.Chat.Id,
         $"<code>🤖 BOT: </code> " +
@@ -132,43 +137,42 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
         $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
         replyMarkup: Logger(),
         parseMode: ParseMode.Html);
-        status = defaul;
+
+        users[user_id].Status = Status.defaul;
         return;
     }
     if (message.Text.StartsWith("1⃣ Логин"))
     {
-        status = login;
-
         await bot.SendTextMessageAsync(
          message.Chat.Id,
          $"<code>🤖 BOT:</code><b> Придумай логин: </b> ",
          parseMode: ParseMode.Html
          );
+        users[user_id].Status = Status.login;
         return;
     }
     if (message.Text.StartsWith("2⃣ Пароль"))
     {
-        status = password;
         await bot.SendTextMessageAsync(
         message.Chat.Id,
         $"<code>🤖 BOT:</code><b> Придумай пароль: </b> ",
         parseMode: ParseMode.Html
         );
+        users[user_id].Status = Status.password;
         return;
     }
     if (message.Text.StartsWith("3⃣ Дата рождения"))
     {
-        status = date;
         await bot.SendTextMessageAsync(
         message.Chat.Id,
         $"<code>🤖 BOT:</code><b> Введите дату рождения: </b> ",
         parseMode: ParseMode.Html
         );
+        users[user_id].Status = Status.date;
         return;
     }
     if (message.Text.StartsWith("4⃣ Проверка ✅"))
     {
-        string user_ID = message.Chat.Id.ToString();
         if (users.ContainsKey(user_id))
         {
             Console.WriteLine("ПРОВЕРКА: \n");
@@ -205,8 +209,8 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
                    users[user_id].Login,
                    users[user_id].Password);
 
-               status = defaul;
-               return;
+                users[user_id].Status = Status.defaul;
+                return;
             }
             else
             {
@@ -216,19 +220,19 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
                 parseMode: ParseMode.Html,
                 replyMarkup: Logger());
 
+                users[user_id].Status = Status.defaul;
                 return;
             }
 
         }    
     }
 
-    if (status is login)
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.login)
     {
         string login = message.Text;
-        string user_ID = message.Chat.Id.ToString();
 
-        if (users.ContainsKey(user_id))
-        {
+            Console.WriteLine(status);
+
             Console.WriteLine($"login = {login}");
             await bot.SendTextMessageAsync(message.Chat.Id,
                  $"<code>🤖 BOT: </code> " +
@@ -236,21 +240,20 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
                  replyMarkup: Logger(),
                  parseMode: ParseMode.Html);
 
-            users[user_id].Login = login;
+        users[user_id].Login = login;
 
-            status = defaul;
-            return;
-        }
+        users[user_id].Status = Status.defaul;
+
+        return;
 
             
-    }    // пользователь вводит логин
-    if (status is password)
+    }
+    // пользователь вводит логин
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.password)
     {
         string password = message.Text;
-        string user_ID = message.Chat.Id.ToString();
 
-        if (users.ContainsKey(user_id))
-        {
+
             Console.WriteLine($"password = {password}");
             await bot.SendTextMessageAsync(message.Chat.Id,
                  $"<code>🤖 BOT: </code> " +
@@ -258,19 +261,18 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
                  replyMarkup: Logger(),
                  parseMode: ParseMode.Html);
 
-            users[user_id].Password = password;
+        users[user_id].Password = password;
+        users[user_id].Status = Status.defaul;
 
-            status = defaul;
-            return;
-        }
-           
-    } // пользователь вводит пароль
-    if (status is date)
+         return;
+        
+    }
+    // пользователь вводит пароль
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.date)
     {
         // преобразовываем строку из даты
         string date = message.Text;
         string format = "dd.MM.yyyy";
-        string user_ID = message.Chat.Id.ToString();
 
         if (users.ContainsKey(user_id))
         {
@@ -287,6 +289,7 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
                     parseMode: ParseMode.Html);
 
                 users[user_id].Date = dateTime;
+                users[user_id].Status = (int)defaul;
 
                 status = defaul;
                 return;
@@ -299,12 +302,15 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
                     $"<b>\nПример: </b> <code> 12.12.2012 </code> ",
                     replyMarkup: Logger(),
                     parseMode: ParseMode.Html);
-                status = defaul;
+
+                users[user_id].Status = Status.defaul;
+
                 return;
             }
         }
             
-    }     // пользователь вводит дату
+    }
+    // пользователь вводит дату
 
     await bot.SendTextMessageAsync(
         message.Chat.Id,
@@ -313,227 +319,264 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
         $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
         replyMarkup: Logger(),
         parseMode: ParseMode.Html);
-    status = defaul;
+
+    users[user_id].Status = Status.defaul;
+
     return;
 
 }
-async Task HandleMesssage(ITelegramBotClient bot, Message message)
+async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_id)
 {
-    if (message.Text.StartsWith("/start"))
-    { 
+
+    if (users.ContainsKey(user_id))
+    {
+        users[user_id].UserTgid = user_id;
+        Console.WriteLine("User: \n");
+        Console.WriteLine("_________________________");
+        Console.WriteLine($"User ID: {users[user_id]}");
+        Console.WriteLine("_________________________");
+        Console.WriteLine("Mои пользователи: \n");
+
+        foreach (KeyValuePair<string, main.User> user in users)
+        {
+            Console.WriteLine($"UserTgid: {user.Value.UserTgid}");
+            Console.WriteLine($"Status: {user.Value.Status}\n");
+        }
+
+        Console.WriteLine("_________________________");
+    }
+
+        if (message.Text.StartsWith("/start"))
+        {
             await bot.SendTextMessageAsync(
             message.Chat.Id,
             empty.MainOffice,
             replyMarkup: Top_menu(),
             parseMode: ParseMode.Html
             );
-            status = defaul;
-            return;
-    }
+            users[user_id].Status = Status.defaul;
 
-    // кнопки
-    if (message.Text.StartsWith("🎮 Играть 🎮"))
-    {
-        await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code><b> Выбери викторину 🔮 </b>",
-            replyMarkup: Game_menu(),
-            parseMode: ParseMode.Html);
-        status = game;
-        return;
-    }
-    if (message.Text.StartsWith("🛠 Настройки 🛠"))
-    {
-        status = settings;
-        await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code><b> Выбери раздел 🛠 </b>",
-            replyMarkup: Settings_menu(),
-            parseMode: ParseMode.Html);
-        return;
-    }
-    if (message.Text.StartsWith("🔙 Назад 🔙"))
-    {
-        status = defaul;
-        await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code><b> назад  🚀 </b>",
-            replyMarkup: Top_menu(),
-            parseMode: ParseMode.Html);
-        return;
-    }
-
-    // состояние бота 
-    if (status is settings)    // пользователь в menu settings
-    {
-        Console.WriteLine($"Status:{status}");
-        if (message.Text.StartsWith("🔧 Смена пароля 🔧"))
-        {
-            status = passwordChang;
-            await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code><b> Введите новый пароль: </b> ",
-            parseMode: ParseMode.Html
-            );
             return;
         }
-        if (message.Text.StartsWith("👶 Смена даты рождения 👶"))
+
+        // кнопки
+        if (message.Text.StartsWith("🎮 Играть 🎮"))
         {
-            status = birthdayСhange;
             await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code><b> Введите новую дату рождения: </b> ",
-            parseMode: ParseMode.Html
-            );
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code><b> Выбери викторину 🔮 </b>",
+                replyMarkup: Game_menu(),
+                parseMode: ParseMode.Html);
+            users[user_id].Status = Status.game;
+
             return;
         }
-    }
-    if (status is birthdayСhange)
-    {
-        string date = message.Text;
-        string format = "dd.MM.yyyy";
-        DateTime dateTime;
-
-        if (DateTime.TryParseExact(date, format, null,
-            DateTimeStyles.None, out dateTime))
+        if (message.Text.StartsWith("🛠 Настройки 🛠"))
         {
-            Console.WriteLine($"date = {dateTime}");
-            await bot.SendTextMessageAsync(message.Chat.Id,
-                $"<code>🤖 BOT: </code> " +
-                $"<b>Дата сохранена: {dateTime.ToString(format)}✅</b>",
+            
+            await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code><b> Выбери раздел 🛠 </b>",
                 replyMarkup: Settings_menu(),
                 parseMode: ParseMode.Html);
-            db.UpdateUserDate($"{message.From.Id}", dateTime);
-            status = settings;
+            users[user_id].Status = Status.settings;
+ 
             return;
         }
-        else
+        if (message.Text.StartsWith("🔙 Назад 🔙"))
         {
-            await bot.SendTextMessageAsync(message.Chat.Id,
-                $"<code>🤖 BOT: </code> " +
-                "<b>Некорректный формат даты. Попробуйте еще раз.🚫</b>" +
-                $"<b>\nПример: </b> <code> 12.12.2012 </code> ",
-                replyMarkup: Settings_menu(),
+            await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code><b> назад  🚀 </b>",
+                replyMarkup: Top_menu(),
                 parseMode: ParseMode.Html);
-            status = settings;
+
+            users[user_id].Status = Status.defaul;
+
             return;
         }
-    }
-    if (status is passwordChang) // пользователь новый пароль
-    {
-        string newPassword = message.Text;
-        db.UpdateUserPassword($"{message.From.Id}", newPassword);
-        await bot.SendTextMessageAsync(
-        message.Chat.Id,
-        $"<code>🤖 BOT:</code><b> Пароль был изменен на {newPassword}✅</b> ",
-        parseMode: ParseMode.Html
-        );
 
-        status = settings;
-        return;
-    }
-
-    if (status is game)
-    {
-        if (message.Text.StartsWith("💂‍♀️ История 👩‍🚀"))
+        // состояние бота
+        if (users.ContainsKey(user_id) && users[user_id].Status == Status.settings)    // пользователь в menu settings
         {
-            status = gameHistory;
+            Console.WriteLine($"Status:{status}");
+            if (message.Text.StartsWith("🔧 Смена пароля 🔧"))
+            {
+
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code><b> Введите новый пароль: </b> ",
+                parseMode: ParseMode.Html
+                );
+
+                users[user_id].Status = Status.passwordChang;
+                return;
+            }
+            if (message.Text.StartsWith("👶 Смена даты рождения 👶"))
+            {
+
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code><b> Введите новую дату рождения: </b> ",
+                parseMode: ParseMode.Html
+                );
+
+                users[user_id].Status = Status.birthdayСhange;
+                return;
+            }
+        }
+        if (users.ContainsKey(user_id) && users[user_id].Status == Status.birthdayСhange)
+        {
+            string date = message.Text;
+            string format = "dd.MM.yyyy";
+            DateTime dateTime;
+
+            if (DateTime.TryParseExact(date, format, null,
+                DateTimeStyles.None, out dateTime))
+            {
+                Console.WriteLine($"date = {dateTime}");
+                await bot.SendTextMessageAsync(message.Chat.Id,
+                    $"<code>🤖 BOT: </code> " +
+                    $"<b>Дата сохранена: {dateTime.ToString(format)}✅</b>",
+                    replyMarkup: Settings_menu(),
+                    parseMode: ParseMode.Html);
+                db.UpdateUserDate(users[user_id].UserTgid, dateTime);
+
+                users[user_id].Status = Status.settings;
+
+                return;
+            }
+            else
+            {
+                await bot.SendTextMessageAsync(message.Chat.Id,
+                    $"<code>🤖 BOT: </code> " +
+                    "<b>Некорректный формат даты. Попробуйте еще раз.🚫</b>" +
+                    $"<b>\nПример: </b> <code> 12.12.2012 </code> ",
+                    replyMarkup: Settings_menu(),
+                    parseMode: ParseMode.Html);
+
+                users[user_id].Status = Status.settings;
+
+                return;
+            }
+        }
+        if (users.ContainsKey(user_id) && users[user_id].Status == Status.passwordChang) // пользователь новый пароль
+        {
+            string newPassword = message.Text;
+            db.UpdateUserPassword(users[user_id].UserTgid, newPassword);
             await bot.SendTextMessageAsync(
             message.Chat.Id,
-            $"<code>🤖 BOT:</code>" +
-            $"<b> Вы выбрали раздел 💂‍♀️ История 👩‍🚀 </b>\n" +
-            empty.Awards,
-            replyMarkup: Geme_History_start(),
+            $"<code>🤖 BOT:</code><b> Пароль был изменен на {newPassword}✅</b> ",
             parseMode: ParseMode.Html
-            ) ;
+            );
+
+            users[user_id].Status = Status.settings;
+
             return;
         }
-    }
-    if (status is gameHistory)
-    {
-        questions = db.GetRandomQuestionsFromDb(20);
-
-        // foreach (var item in questions)
-        // {
-        //     Console.WriteLine(item);
-        // }
-        db.UpdateQuestions($"{message.From.Id}");
-        Console.WriteLine($"Status: {status}");
-
-        foreach (var question in questions)
+        if (users.ContainsKey(user_id) && users[user_id].Status == Status.game)
         {
-            await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code>" +
-            $"<b> Вопрос {question["question"]} </b>\n",
-            parseMode: ParseMode.Html,
-            replyMarkup:Geme_History_Answer
-            (question["answer"].ToString(), question["badQuestion1"].ToString(),
-            question["badQuestion2"].ToString(), question["badQuestion3"].ToString())
-            );
-            Console.WriteLine($"ID вопроса {question["id"]}");
-            status = gemeAnswer;
-            return;
+                if (message.Text.StartsWith("💂‍♀️ История 👩‍🚀"))
+                {
+                    await bot.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"<code>🤖 BOT:</code>" +
+                    $"<b> Вы выбрали раздел 💂‍♀️ История 👩‍🚀 </b>\n" +
+                    empty.Awards,
+                    replyMarkup: Geme_History_start(),
+                    parseMode: ParseMode.Html
+                    );
+                    users[user_id].Status = Status.gameHistory;
+                    return;
+                }
         }
-        
-        await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code>" +
-            $"<b>Игра окончена! </b>\n",
-            parseMode: ParseMode.Html,
-            replyMarkup: Game_menu()
-            );
-        status = game;
-        return;
-    }
-    if (status is gemeAnswer)
-    {
-        string answer = message.Text;
-        foreach (var question in questions)
+        if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameHistory)
         {
-            await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code>" +
-            $"<b> Ответ: {answer} </b>\n",
-            parseMode: ParseMode.Html,
-            replyMarkup: Geme_History_process()
-            );
-            int indexq = (int)question["id"];
-            Console.WriteLine($"ID ответа {indexq}");
-            Console.WriteLine($"Вопрос {question["question"]}");
+                questions = db.GetRandomQuestionsFromDb(20);
 
-           if(db.CheckAnswer(indexq, answer))
-           {
-                db.UpdatePoint($"{message.From.Id}");
+                db.UpdateQuestions($"{users[user_id].UserTgid}");
+
+                Console.WriteLine($"Status: {status}");
+
+                foreach (var question in questions)
+                {
+                    await bot.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"<code>🤖 BOT:</code>" +
+                    $"<b> Вопрос {question["question"]} </b>\n",
+                    parseMode: ParseMode.Html,
+                    replyMarkup: Geme_History_Answer
+                    (question["answer"].ToString(), question["badQuestion1"].ToString(),
+                    question["badQuestion2"].ToString(), question["badQuestion3"].ToString())
+                    );
+                    Console.WriteLine($"ID вопроса {question["id"]}");
+
+                    users[user_id].Status = Status.gemeAnswer;
+                    return;
+                }
+
+                await bot.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"<code>🤖 BOT:</code>" +
+                    $"<b>Игра окончена! </b>\n",
+                    parseMode: ParseMode.Html,
+                    replyMarkup: Game_menu()
+                    );
+
+                users[user_id].Status = Status.game;
+
+                return;
+        }
+        if (users.ContainsKey(user_id) && users[user_id].Status == Status.gemeAnswer)
+        {
+            string answer = message.Text;
+            foreach (var question in questions)
+            {
                 await bot.SendTextMessageAsync(
                 message.Chat.Id,
                 $"<code>🤖 BOT:</code>" +
-                $"<b> Правильно ✅ </b>\n",
-                parseMode: ParseMode.Html
+                $"<b> Ответ: {answer} </b>\n",
+                parseMode: ParseMode.Html,
+                replyMarkup: Geme_History_process()
                 );
-                status = gameHistory;
-                return;
-           }
-           else
-           {
-                await bot.SendTextMessageAsync(
-                message.Chat.Id,
-                $"<code>🤖 BOT:</code>" +
-                $"<b>Неправильно ❌</b>" +
-                $"\n<b>Правильный ответ: {question["answer"]} </b>\n",
-                parseMode: ParseMode.Html
-                );
-                status = gameHistory;
-                return;
-           }
+                int indexq = (int)question["id"];
+                Console.WriteLine($"ID ответа {indexq}");
+                Console.WriteLine($"Вопрос {question["question"]}");
+
+                if (db.CheckAnswer(indexq, answer))
+                {
+                    db.UpdatePoint(users[user_id].UserTgid);
+                    await bot.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"<code>🤖 BOT:</code>" +
+                    $"<b> Правильно ✅ </b>\n",
+                    parseMode: ParseMode.Html
+                    );
+                    users[user_id].Status = Status.gameHistory;
+    
+                    return;
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"<code>🤖 BOT:</code>" +
+                    $"<b>Неправильно ❌</b>" +
+                    $"\n<b>Правильный ответ: {question["answer"]} </b>\n",
+                    parseMode: ParseMode.Html
+                    );
+                    users[user_id].Status = Status.gameHistory;
+                    return;
+                }
+            }
         }
-        return;
-    }
 
 
-    await bot.SendTextMessageAsync(message.Chat.Id,
-        $"Это HandleMesssage {message.Text}");
+        await bot.SendTextMessageAsync(message.Chat.Id,
+            $"Это HandleMesssage {message.Text}");
+    users[user_id].Status = Status.defaul;
     return;
+    
 }
 async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
 {
