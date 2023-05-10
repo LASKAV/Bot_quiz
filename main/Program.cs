@@ -47,7 +47,7 @@ Status status = Status.defaul;
 EmptyStruct empty = new EmptyStruct();
 
 var db = new DatabaseMongoDB();
-var questions = db.GetRandomQuestionsFromDb(5);
+var questions = db.GetRandomQuestionsFromDb(20);
 
 Dictionary<string, main.User> users = new Dictionary<string, main.User>();
 
@@ -191,7 +191,7 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
                 !string.IsNullOrEmpty(users[user_id].Password) &&
                 users[user_id].Date != DateTime.MinValue)
             {
-              // добавляем объект User в список пользователей
+
                await bot.SendTextMessageAsync(message.Chat.Id,
                       $"<code>🤖 BOT: </code> " +
                       "<b>Регистрация прошла успешно!✅</b>",
@@ -289,9 +289,8 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
                     parseMode: ParseMode.Html);
 
                 users[user_id].Date = dateTime;
-                users[user_id].Status = (int)defaul;
+                users[user_id].Status = Status.defaul;
 
-                status = defaul;
                 return;
             }
             else
@@ -395,9 +394,23 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
             return;
         }
+        if (message.Text.StartsWith("Отсановить игру"))
+        {
+            await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b>Игра окончена! </b>\n",
+                parseMode: ParseMode.Html,
+                replyMarkup: Game_menu()
+                );
 
-        // состояние бота
-        if (users.ContainsKey(user_id) && users[user_id].Status == Status.settings)    // пользователь в menu settings
+            users[user_id].Status = Status.defaul;
+
+            return;
+        }
+
+    // состояние бота
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.settings)    // пользователь в menu settings
         {
             Console.WriteLine($"Status:{status}");
             if (message.Text.StartsWith("🔧 Смена пароля 🔧"))
@@ -496,12 +509,18 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
                 db.UpdateQuestions($"{users[user_id].UserTgid}");
 
-                Console.WriteLine($"Status: {status}");
+                Console.WriteLine($"Status: {status}");;
 
                 foreach (var question in questions)
                 {
+
+                    Console.WriteLine("User: \n");
+                    Console.WriteLine("_________________________");
+                    Console.WriteLine($"User ID: {users[user_id].UserTgid}");
+                    Console.WriteLine("_________________________");
+
                     await bot.SendTextMessageAsync(
-                    message.Chat.Id,
+                    users[user_id].UserTgid,
                     $"<code>🤖 BOT:</code>" +
                     $"<b> Вопрос {question["question"]} </b>\n",
                     parseMode: ParseMode.Html,
@@ -529,11 +548,12 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
         if (users.ContainsKey(user_id) && users[user_id].Status == Status.gemeAnswer)
         {
+
             string answer = message.Text;
             foreach (var question in questions)
             {
                 await bot.SendTextMessageAsync(
-                message.Chat.Id,
+                users[user_id].UserTgid,
                 $"<code>🤖 BOT:</code>" +
                 $"<b> Ответ: {answer} </b>\n",
                 parseMode: ParseMode.Html,
@@ -543,11 +563,16 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 Console.WriteLine($"ID ответа {indexq}");
                 Console.WriteLine($"Вопрос {question["question"]}");
 
-                if (db.CheckAnswer(indexq, answer))
+                Console.WriteLine("_________________________");
+                Console.WriteLine($"User ID: {users[user_id].UserTgid}");
+                Console.WriteLine("_________________________");
+
+
+            if (db.CheckAnswer(indexq, answer) && users.ContainsKey(user_id))
                 {
                     db.UpdatePoint(users[user_id].UserTgid);
                     await bot.SendTextMessageAsync(
-                    message.Chat.Id,
+                    users[user_id].UserTgid,
                     $"<code>🤖 BOT:</code>" +
                     $"<b> Правильно ✅ </b>\n",
                     parseMode: ParseMode.Html
