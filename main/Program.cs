@@ -47,7 +47,7 @@ Status status = Status.defaul;
 EmptyStruct empty = new EmptyStruct();
 
 var db = new DatabaseMongoDB();
-var questions = db.GetRandomQuestionsFromDb(20);
+
 
 Dictionary<string, main.User> users = new Dictionary<string, main.User>();
 
@@ -326,6 +326,10 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
 }
 async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_id)
 {
+    var questionsHistory = db.GetRandomQuestionsFromDb(20, 0);
+    var questionsGeographies = db.GetRandomQuestionsFromDb(20, 1);
+    var questionsBiology = db.GetRandomQuestionsFromDb(20, 2);
+    var questionsMix = db.GetRandomQuestionsFromDb(20, 3);
 
     if (users.ContainsKey(user_id))
     {
@@ -344,8 +348,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
         Console.WriteLine("_________________________");
     }
-
-        if (message.Text.StartsWith("/start"))
+    if (message.Text.StartsWith("/start"))
         {
             await bot.SendTextMessageAsync(
             message.Chat.Id,
@@ -358,8 +361,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
             return;
         }
 
-        // кнопки
-        if (message.Text.StartsWith("🎮 Играть 🎮"))
+    // кнопки
+    if (message.Text.StartsWith("🎮 Играть 🎮"))
         {
             await bot.SendTextMessageAsync(
                 message.Chat.Id,
@@ -370,7 +373,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
             return;
         }
-        if (message.Text.StartsWith("🛠 Настройки 🛠"))
+    if (message.Text.StartsWith("🛠 Настройки 🛠"))
         {
             
             await bot.SendTextMessageAsync(
@@ -382,7 +385,18 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
  
             return;
         }
-        if (message.Text.StartsWith("🔙 Назад 🔙"))
+    if (message.Text.StartsWith("📈 Статистика 📉"))
+    {
+        await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code><b> Выбери раздел 📈  </b>",
+                replyMarkup: Statistics_menu(),
+                parseMode: ParseMode.Html);
+        users[user_id].Status = Status.userStats;
+
+        return;
+    }
+    if (message.Text.StartsWith("🔙 Назад 🔙"))
         {
             await bot.SendTextMessageAsync(
                 message.Chat.Id,
@@ -394,7 +408,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
             return;
         }
-        if (message.Text.StartsWith("Отсановить игру"))
+    if (message.Text.StartsWith("Отсановить игру"))
         {
             await bot.SendTextMessageAsync(
                 message.Chat.Id,
@@ -404,13 +418,15 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 replyMarkup: Game_menu()
                 );
 
-            users[user_id].Status = Status.defaul;
+            users[user_id].Status = Status.game;
 
             return;
         }
 
-    // состояние бота
-    if (users.ContainsKey(user_id) && users[user_id].Status == Status.settings)    // пользователь в menu settings
+     // состояние бота
+
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.settings)
+        // пользователь в menu settings
         {
             Console.WriteLine($"Status:{status}");
             if (message.Text.StartsWith("🔧 Смена пароля 🔧"))
@@ -438,7 +454,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 return;
             }
         }
-        if (users.ContainsKey(user_id) && users[user_id].Status == Status.birthdayСhange)
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.birthdayСhange)
         {
             string date = message.Text;
             string format = "dd.MM.yyyy";
@@ -473,7 +489,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 return;
             }
         }
-        if (users.ContainsKey(user_id) && users[user_id].Status == Status.passwordChang) // пользователь новый пароль
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.passwordChang) // пользователь новый пароль
         {
             string newPassword = message.Text;
             db.UpdateUserPassword(users[user_id].UserTgid, newPassword);
@@ -487,121 +503,490 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
             return;
         }
-        if (users.ContainsKey(user_id) && users[user_id].Status == Status.game)
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.game)
         {
-                if (message.Text.StartsWith("💂‍♀️ История 👩‍🚀"))
+            if (message.Text.StartsWith("💂‍♀️ История 👩‍🚀"))
+            {
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b> Вы выбрали раздел 💂‍♀️ История 👩‍🚀 </b>\n" +
+                empty.Awards,
+                replyMarkup: Geme_History_start(),
+                parseMode: ParseMode.Html
+                );
+                users[user_id].Status = Status.gameHistory;
+                Console.WriteLine("Тут я выбрал раздел ");
+                return;
+            }
+            if (message.Text.StartsWith("🏛 География ✈️"))
                 {
                     await bot.SendTextMessageAsync(
                     message.Chat.Id,
                     $"<code>🤖 BOT:</code>" +
-                    $"<b> Вы выбрали раздел 💂‍♀️ История 👩‍🚀 </b>\n" +
+                    $"<b> Вы выбрали раздел 🏛 География ✈️</b>\n" +
                     empty.Awards,
                     replyMarkup: Geme_History_start(),
                     parseMode: ParseMode.Html
                     );
-                    users[user_id].Status = Status.gameHistory;
+                    users[user_id].Status = Status.gameGeographies;
                     return;
                 }
-        }
-        if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameHistory)
-        {
-                questions = db.GetRandomQuestionsFromDb(20);
-
-                db.UpdateQuestions($"{users[user_id].UserTgid}");
-
-                Console.WriteLine($"Status: {status}");;
-
-                foreach (var question in questions)
+            if (message.Text.StartsWith("🔬 Биология 🦠"))
                 {
-
-                    Console.WriteLine("User: \n");
-                    Console.WriteLine("_________________________");
-                    Console.WriteLine($"User ID: {users[user_id].UserTgid}");
-                    Console.WriteLine("_________________________");
-
                     await bot.SendTextMessageAsync(
-                    users[user_id].UserTgid,
-                    $"<code>🤖 BOT:</code>" +
-                    $"<b> Вопрос {question["question"]} </b>\n",
-                    parseMode: ParseMode.Html,
-                    replyMarkup: Geme_History_Answer
-                    (question["answer"].ToString(), question["badQuestion1"].ToString(),
-                    question["badQuestion2"].ToString(), question["badQuestion3"].ToString())
-                    );
-                    Console.WriteLine($"ID вопроса {question["id"]}");
-
-                    users[user_id].Status = Status.gemeAnswer;
-                    return;
-                }
-
-                await bot.SendTextMessageAsync(
                     message.Chat.Id,
                     $"<code>🤖 BOT:</code>" +
-                    $"<b>Игра окончена! </b>\n",
-                    parseMode: ParseMode.Html,
-                    replyMarkup: Game_menu()
+                    $"<b> Вы выбрали раздел 🔬 Биология 🦠 </b>\n" +
+                    empty.Awards,
+                    replyMarkup: Geme_History_start(),
+                    parseMode: ParseMode.Html
                     );
-
-                users[user_id].Status = Status.game;
-
-                return;
-        }
-        if (users.ContainsKey(user_id) && users[user_id].Status == Status.gemeAnswer)
+                    users[user_id].Status = Status.gameBiology;
+                    return;
+                }
+            if (message.Text.StartsWith("👽 Смешанная 👀"))
+                {
+                    await bot.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"<code>🤖 BOT:</code>" +
+                    $"<b> Вы выбрали раздел 👽 Смешанная 👀 </b>\n" +
+                    empty.Awards,
+                    replyMarkup: Geme_History_start(),
+                    parseMode: ParseMode.Html
+                    );
+                    users[user_id].Status = Status.gameMix;
+                    return;
+                }
+    }
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.userStats)
+    {
+        if (message.Text.StartsWith("🎖 Результаты прошлых викторин 🎖"))
         {
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> 🎖 Результаты прошлых викторин 🎖 </b>\n",
+            replyMarkup: Statistics_menu(),
+            parseMode: ParseMode.Html
+            );
 
-            string answer = message.Text;
-            foreach (var question in questions)
+            users[user_id].Status = Status.userStats;
+            return;
+        }
+        if (message.Text.StartsWith("🏆 ТОП - 20 по разделам 🏆"))
+        {
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> 🏆 ТОП - 20 по разделам 🏆 </b>\n",
+            replyMarkup: Statistics_menu(),
+            parseMode: ParseMode.Html
+            );
+
+            users[user_id].Status = Status.userStats;
+            return;
+        }
+    }
+
+
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameHistory)
+    {
+        questionsHistory = db.GetRandomQuestionsFromDb(20, 0);
+
+        Console.WriteLine("Тут задают вопрос !");
+
+        foreach (KeyValuePair<string, main.User> user in users)
+        {
+            Console.WriteLine($"UserTgid: {user.Value.UserTgid}");
+            Console.WriteLine($"Status: {user.Value.Status}\n");
+        }
+
+        db.UpdateQuestions($"{users[user_id].UserTgid}");
+
+        foreach (var question in questionsHistory)
+        {
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> Вопрос {question["question"]} </b>\n",
+            parseMode: ParseMode.Html,
+            replyMarkup: Geme_History_Answer
+            (question["answer"].ToString(), question["badQuestion1"].ToString(),
+            question["badQuestion2"].ToString(), question["badQuestion3"].ToString())
+            );
+            Console.WriteLine($"ID вопроса {question["id"]}");
+
+            users[user_id].Status = Status.gameAnswerHistory;
+            users[user_id].IdQuse = (int)question["id"];
+
+            return;
+        }
+             await bot.SendTextMessageAsync(
+             message.Chat.Id,
+             $"<code>🤖 BOT:</code>" +
+             $"<b>Игра окончена! </b>\n",
+             parseMode: ParseMode.Html,
+             replyMarkup: Game_menu()
+             );
+
+             users[user_id].Status = Status.game;
+
+             return;
+    }
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameGeographies)
+    {
+        questionsGeographies = db.GetRandomQuestionsFromDb(20, 1);
+
+        Console.WriteLine("Тут задают вопрос !");
+
+        foreach (KeyValuePair<string, main.User> user in users)
+        {
+            Console.WriteLine($"UserTgid: {user.Value.UserTgid}");
+            Console.WriteLine($"Status: {user.Value.Status}\n");
+        }
+
+        db.UpdateQuestions($"{users[user_id].UserTgid}");
+
+        foreach (var question in questionsGeographies)
+        {
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> Вопрос {question["question"]} </b>\n",
+            parseMode: ParseMode.Html,
+            replyMarkup: Geme_History_Answer
+            (question["answer"].ToString(), question["badQuestion1"].ToString(),
+            question["badQuestion2"].ToString(), question["badQuestion3"].ToString())
+            );
+            Console.WriteLine($"ID вопроса {question["id"]}");
+
+            users[user_id].Status = Status.gameAnswerGeographies;
+            users[user_id].IdQuse = (int)question["id"];
+
+            return;
+        }
+        await bot.SendTextMessageAsync(
+        message.Chat.Id,
+        $"<code>🤖 BOT:</code>" +
+        $"<b>Игра окончена! </b>\n",
+        parseMode: ParseMode.Html,
+        replyMarkup: Game_menu()
+        );
+
+        users[user_id].Status = Status.game;
+
+        return;
+    }
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameBiology)
+    {
+        questionsBiology = db.GetRandomQuestionsFromDb(20, 2);
+
+        Console.WriteLine("Тут задают вопрос !");
+
+        foreach (KeyValuePair<string, main.User> user in users)
+        {
+            Console.WriteLine($"UserTgid: {user.Value.UserTgid}");
+            Console.WriteLine($"Status: {user.Value.Status}\n");
+        }
+
+        db.UpdateQuestions($"{users[user_id].UserTgid}");
+
+        foreach (var question in questionsBiology)
+        {
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> Вопрос {question["question"]} </b>\n",
+            parseMode: ParseMode.Html,
+            replyMarkup: Geme_History_Answer
+            (question["answer"].ToString(), question["badQuestion1"].ToString(),
+            question["badQuestion2"].ToString(), question["badQuestion3"].ToString())
+            );
+            Console.WriteLine($"ID вопроса {question["id"]}");
+
+            users[user_id].Status = Status.gameAnswerBiology;
+            users[user_id].IdQuse = (int)question["id"];
+            return;
+        }
+        await bot.SendTextMessageAsync(
+        message.Chat.Id,
+        $"<code>🤖 BOT:</code>" +
+        $"<b>Игра окончена! </b>\n",
+        parseMode: ParseMode.Html,
+        replyMarkup: Game_menu()
+        );
+
+        users[user_id].Status = Status.game;
+
+        return;
+    }
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameMix)
+    {
+        questionsMix = db.GetRandomQuestionsFromDb(20, 3);
+
+        Console.WriteLine("Тут задают вопрос !");
+
+        foreach (KeyValuePair<string, main.User> user in users)
+        {
+            Console.WriteLine($"UserTgid: {user.Value.UserTgid}");
+            Console.WriteLine($"Status: {user.Value.Status}\n");
+        }
+
+        db.UpdateQuestions($"{users[user_id].UserTgid}");
+
+        foreach (var question in questionsMix)
+        {
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> Вопрос {question["question"]} </b>\n",
+            parseMode: ParseMode.Html,
+            replyMarkup: Geme_History_Answer
+            (question["answer"].ToString(), question["badQuestion1"].ToString(),
+            question["badQuestion2"].ToString(), question["badQuestion3"].ToString())
+            );
+            Console.WriteLine($"ID вопроса {question["id"]}");
+
+            users[user_id].Status = Status.gameAnswerMix;
+            users[user_id].IdQuse = (int)question["id"];
+            return;
+        }
+        await bot.SendTextMessageAsync(
+        message.Chat.Id,
+        $"<code>🤖 BOT:</code>" +
+        $"<b>Игра окончена! </b>\n",
+        parseMode: ParseMode.Html,
+        replyMarkup: Game_menu()
+        );
+
+        users[user_id].Status = Status.game;
+
+        return;
+    }
+
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameAnswerHistory)
+    {
+
+        string answer = message.Text;
+        Console.WriteLine("Тут ответ на ворос !");
+
+        foreach (KeyValuePair<string, main.User> user in users)
+        {
+            Console.WriteLine($"UserTgid: {user.Value.UserTgid}");
+            Console.WriteLine($"Status: {user.Value.Status}");
+            Console.WriteLine($"ID ques: {user.Value.IdQuse}\n");
+        }
+
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> Ответ: {answer} </b>\n",
+            parseMode: ParseMode.Html,
+            replyMarkup: Geme_History_process()
+            );
+            int indexq = (int)users[user_id].IdQuse;
+
+            Console.WriteLine($"ID ответа {indexq}");
+
+            Console.WriteLine("_________________________");
+            Console.WriteLine($"User ID: {users[user_id].UserTgid}");
+            Console.WriteLine("_________________________");
+
+
+            if (db.CheckRandomAnswer(indexq, answer, 0))
+            {
+                db.UpdatePoint(users[user_id].UserTgid);
+
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b> Правильно ✅ </b>\n",
+                parseMode: ParseMode.Html
+                );
+
+                users[user_id].Status = Status.gameHistory;
+                return;
+            }
+            else
             {
                 await bot.SendTextMessageAsync(
-                users[user_id].UserTgid,
+                message.Chat.Id,
                 $"<code>🤖 BOT:</code>" +
-                $"<b> Ответ: {answer} </b>\n",
-                parseMode: ParseMode.Html,
-                replyMarkup: Geme_History_process()
+                $"<b>Неправильно ❌</b>",
+                parseMode: ParseMode.Html
                 );
-                int indexq = (int)question["id"];
-                Console.WriteLine($"ID ответа {indexq}");
-                Console.WriteLine($"Вопрос {question["question"]}");
 
-                Console.WriteLine("_________________________");
-                Console.WriteLine($"User ID: {users[user_id].UserTgid}");
-                Console.WriteLine("_________________________");
-
-
-            if (db.CheckAnswer(indexq, answer) && users.ContainsKey(user_id))
-                {
-                    db.UpdatePoint(users[user_id].UserTgid);
-                    await bot.SendTextMessageAsync(
-                    users[user_id].UserTgid,
-                    $"<code>🤖 BOT:</code>" +
-                    $"<b> Правильно ✅ </b>\n",
-                    parseMode: ParseMode.Html
-                    );
-                    users[user_id].Status = Status.gameHistory;
-    
-                    return;
-                }
-                else
-                {
-                    await bot.SendTextMessageAsync(
-                    message.Chat.Id,
-                    $"<code>🤖 BOT:</code>" +
-                    $"<b>Неправильно ❌</b>" +
-                    $"\n<b>Правильный ответ: {question["answer"]} </b>\n",
-                    parseMode: ParseMode.Html
-                    );
-                    users[user_id].Status = Status.gameHistory;
-                    return;
-                }
+                users[user_id].Status = Status.gameHistory;
+                return;
             }
+    }
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameAnswerGeographies)
+    {
+        string answer = message.Text;
+        Console.WriteLine("Тут ответ на ворос !");
+
+        foreach (KeyValuePair<string, main.User> user in users)
+        {
+            Console.WriteLine($"UserTgid: {user.Value.UserTgid}");
+            Console.WriteLine($"Status: {user.Value.Status}\n");
         }
 
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> Ответ: {answer} </b>\n",
+            parseMode: ParseMode.Html,
+            replyMarkup: Geme_History_process()
+            );
+            int indexq = (int)users[user_id].IdQuse;
+            Console.WriteLine($"ID ответа {indexq}");
 
-        await bot.SendTextMessageAsync(message.Chat.Id,
-            $"Это HandleMesssage {message.Text}");
-    users[user_id].Status = Status.defaul;
-    return;
+            Console.WriteLine("_________________________");
+            Console.WriteLine($"User ID: {users[user_id].UserTgid}");
+            Console.WriteLine("_________________________");
+
+
+            if (db.CheckRandomAnswer(indexq, answer, 1))
+            {
+                db.UpdatePoint(users[user_id].UserTgid);
+
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b> Правильно ✅ </b>\n",
+                parseMode: ParseMode.Html
+                );
+
+                users[user_id].Status = Status.gameGeographies;
+                return;
+            }
+            else
+            {
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b>Неправильно ❌</b>",
+                parseMode: ParseMode.Html
+                );
+
+                users[user_id].Status = Status.gameGeographies;
+                return;
+            }
     
+    }
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameAnswerBiology)
+    {
+        string answer = message.Text;
+        Console.WriteLine("Тут ответ на ворос !");
+
+        foreach (KeyValuePair<string, main.User> user in users)
+        {
+            Console.WriteLine($"UserTgid: {user.Value.UserTgid}");
+            Console.WriteLine($"Status: {user.Value.Status}\n");
+        }
+
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> Ответ: {answer} </b>\n",
+            parseMode: ParseMode.Html,
+            replyMarkup: Geme_History_process()
+            );
+            int indexq = (int)users[user_id].IdQuse;
+            Console.WriteLine($"ID ответа {indexq}");
+
+            Console.WriteLine("_________________________");
+            Console.WriteLine($"User ID: {users[user_id].UserTgid}");
+            Console.WriteLine("_________________________");
+
+
+            if (db.CheckRandomAnswer(indexq, answer, 2))
+            {
+                db.UpdatePoint(users[user_id].UserTgid);
+
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b> Правильно ✅ </b>\n",
+                parseMode: ParseMode.Html
+                );
+
+                users[user_id].Status = Status.gameBiology;
+                return;
+            }
+            else
+            {
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b>Неправильно ❌</b>",
+                parseMode: ParseMode.Html
+                );
+
+                users[user_id].Status = Status.gameBiology;
+                return;
+            }
+
+    }
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameAnswerMix)
+    {
+        string answer = message.Text;
+        Console.WriteLine("Тут ответ на ворос !");
+
+        foreach (KeyValuePair<string, main.User> user in users)
+        {
+            Console.WriteLine($"UserTgid: {user.Value.UserTgid}");
+            Console.WriteLine($"Status: {user.Value.Status}\n");
+        }
+
+            await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code>" +
+            $"<b> Ответ: {answer} </b>\n",
+            parseMode: ParseMode.Html,
+            replyMarkup: Geme_History_process()
+            );
+            int indexq = (int)users[user_id].IdQuse;
+            Console.WriteLine($"ID ответа {indexq}");
+
+            Console.WriteLine("_________________________");
+            Console.WriteLine($"User ID: {users[user_id].UserTgid}");
+            Console.WriteLine("_________________________");
+
+
+            if (db.CheckRandomAnswer(indexq, answer, 3))
+            {
+                db.UpdatePoint(users[user_id].UserTgid);
+
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b> Правильно ✅ </b>\n",
+                parseMode: ParseMode.Html
+                );
+
+                users[user_id].Status = Status.gameMix;
+                return;
+            }
+            else
+            {
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b>Неправильно ❌</b>" ,
+                parseMode: ParseMode.Html
+                );
+
+                users[user_id].Status = Status.gameMix;
+                return;
+            }
+    }
+
+    await bot.SendTextMessageAsync(message.Chat.Id,
+            $"Это HandleMesssage {message.Text}");
+    return;
+
 }
 async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
 {

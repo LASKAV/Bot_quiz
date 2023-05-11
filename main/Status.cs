@@ -14,7 +14,15 @@ namespace main
         passwordChang = 7,
         game = 8,
         gameHistory = 9,
-        gemeAnswer = 10
+        gameAnswerHistory = 10,
+        gameGeographies = 11,
+        gameBiology = 12,
+        gameMix = 13,
+        gameAnswerGeographies = 14,
+        gameAnswerBiology = 15,
+        gameAnswerMix = 16,
+        userStats = 17
+
     }
 }
 

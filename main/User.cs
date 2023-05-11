@@ -8,6 +8,7 @@ namespace main
         public string Login { get; set; }
         public string Password { get; set; }
         public Status Status { get; set; }
+        public int IdQuse { get; set; }
 
         public User() { }
 

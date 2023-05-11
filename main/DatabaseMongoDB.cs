@@ -31,7 +31,7 @@ namespace main
             // HistoryQuestions();
             // GeographiesQuestions();
             // BiologyQuestions();
-            MixQuestions();
+            // MixQuestions();
         }
 
         public void Iuser(string UserTgid)
@@ -136,7 +136,108 @@ namespace main
                 Console.ResetColor();
             }
         }
-        // вопросы для History
+        // вопросы 
+        public List<BsonDocument> GetRandomQuestionsFromDb(int count, int type_game)
+        {
+            var filter = Builders<BsonDocument>.Filter.Empty;
+            List<BsonDocument> questions = null;
+
+            switch (type_game)
+            {
+                case 0:
+                    questions = _history_questions.Find(filter).ToList();
+                    break;
+                case 1:
+                    questions = _geographies_questions.Find(filter).ToList();
+                    break;
+                case 2:
+                    questions = _biology_questions.Find(filter).ToList();
+                    break;
+                case 3:
+                    questions = _mix_questions.Find(filter).ToList();
+                    break;
+            }
+
+            var random = new Random();
+            var selectedQuestions = questions.OrderBy(q => random.Next()).Take(count).ToList();
+
+            var randomCollection = new List<BsonDocument>();
+            foreach (var question in selectedQuestions)
+            {
+                var randomQuestion = new BsonDocument();
+                randomQuestion.Add("id", question["id"]);
+                randomQuestion.Add("question", question["question"]);
+                randomQuestion.Add("answer", question["answer"]);
+                randomQuestion.Add("badQuestion1", question["badQuestion1"]);
+                randomQuestion.Add("badQuestion2", question["badQuestion2"]);
+                randomQuestion.Add("badQuestion3", question["badQuestion3"]);
+                randomCollection.Add(randomQuestion);
+                
+            }
+            // PrintBsonDocuments(randomCollection);
+
+            return randomCollection;
+        }
+        public void PrintBsonDocuments(IEnumerable<BsonDocument> documents)
+        {
+            Console.WriteLine("Вопросы: ");
+            foreach (var document in documents)
+            {
+                Console.WriteLine(document.ToJson());
+            }
+        }
+        // проверка ответа 
+        public bool CheckRandomAnswer(int questionId, string userAnswer, int type_game)
+        {
+            var filter = Builders<BsonDocument>.Filter.Eq("id", questionId);
+            List<BsonDocument> questions = null;
+
+            switch (type_game)
+            {
+                case 0:
+                    questions = _history_questions.Find(filter).ToList();
+                    break;
+                case 1:
+                    questions = _geographies_questions.Find(filter).ToList();
+                    break;
+                case 2:
+                    questions = _biology_questions.Find(filter).ToList();
+                    break;
+                case 3:
+                    questions = _mix_questions.Find(filter).ToList();
+                    break;
+            }
+
+            var question = questions.FirstOrDefault();
+
+            if (question != null && userAnswer.ToLower() == question["answer"].ToString().ToLower())
+            {
+                Console.WriteLine("true");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("false");
+                return false;
+            }
+        }
+
+        // добовляем очки вопросов
+        public void UpdateQuestions(string userId)
+        {
+            var filter = Builders<BsonDocument>.Filter.Eq("UserID", userId);
+            var update = Builders<BsonDocument>.Update.Inc("Questions", 1);
+            _usersCollection.UpdateOne(filter, update);
+        }
+        // добовляем очки за правильный ответ
+        public void UpdatePoint(string userId)
+        {
+            var filter = Builders<BsonDocument>.Filter.Eq("UserID", userId);
+            var update = Builders<BsonDocument>.Update.Inc("Points", 1);
+            _usersCollection.UpdateOne(filter, update);
+        }
+        
+        // вопросы для История
         public void HistoryQuestions()
         {
             var questions = new BsonDocument[]
@@ -250,7 +351,7 @@ namespace main
                     {"badQuestion3", "7 декабря 1916 года" },
                 },
                 new BsonDocument
-                { 
+                {
                     {"id", 13},
                     {"question", "Кто был первым князем государства Киевской Руси?"},
                     {"answer", "Князь Олег"},
@@ -329,63 +430,6 @@ namespace main
             var indexModel =
                 new CreateIndexModel<BsonDocument>(indexKeysDefinition);
             _history_questions.Indexes.CreateOne(indexModel);
-        }
-        // вопросы 
-        public List<BsonDocument> GetRandomQuestionsFromDb(int count)
-        {
-            var filter = Builders<BsonDocument>.Filter.Empty;
-            var questions = _history_questions.Find(filter).ToList();
-
-            var random = new Random();
-            var selectedQuestions = questions.OrderBy(q => random.Next()).Take(count).ToList();
-
-            var randomCollection = new List<BsonDocument>();
-            foreach (var question in selectedQuestions)
-            {
-                var randomQuestion = new BsonDocument();
-                randomQuestion.Add("id", question["id"]);
-                randomQuestion.Add("question", question["question"]);
-                randomQuestion.Add("answer", question["answer"]);
-                randomQuestion.Add("badQuestion1", question["badQuestion1"]);
-                randomQuestion.Add("badQuestion2", question["badQuestion2"]);
-                randomQuestion.Add("badQuestion3", question["badQuestion3"]);
-                randomCollection.Add(randomQuestion);
-            }
-
-            return randomCollection;
-        }
-        // провкрка ответа 
-        public bool CheckAnswer(int questionId, string userAnswer)
-        {
-            // Создаем фильтр для поиска вопроса по id
-            var filter = Builders<BsonDocument>.Filter.Eq("id", questionId);
-
-            // Выполняем запрос к базе данных и извлекаем первый результат
-            var question = _history_questions.Find(filter).FirstOrDefault();
-
-            // Проверяем, совпадает ли ответ пользователя с правильным ответом в базе данных
-            if (question != null && userAnswer.ToLower() == question["answer"].ToString().ToLower())
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        // добовляем очки вопросов
-        public void UpdateQuestions(string userId)
-        {
-            var filter = Builders<BsonDocument>.Filter.Eq("UserID", userId);
-            var update = Builders<BsonDocument>.Update.Inc("Questions", 1);
-            _usersCollection.UpdateOne(filter, update);
-        }
-        // добовляем очки за правильный ответ
-        public void UpdatePoint(string userId)
-        {
-            var filter = Builders<BsonDocument>.Filter.Eq("UserID", userId);
-            var update = Builders<BsonDocument>.Update.Inc("Points", 1);
-            _usersCollection.UpdateOne(filter, update);
         }
         // вопросы для Географии
         public void GeographiesQuestions()
@@ -566,10 +610,11 @@ namespace main
                 new BsonDocument
                 {
                     {"id", 20},
-                    {"question", "Какое озеро является самым глубоким в мире?"},
-                    {"answer", "озеро Байкал"},
-                    {"badQuestion1", "озеро Виктория" },
-                    {"badQuestion2", "озер"},
+                    {"question", "В какой стране находится самая большая сахарная пустыня в мире?"},
+                    {"answer", "Мали"},
+                    {"badQuestion1", "Египет" },
+                    {"badQuestion2", "Саудовская Аравия" },
+                    {"badQuestion3", "Китай" },
                 }
             };
 
@@ -580,6 +625,7 @@ namespace main
                 new CreateIndexModel<BsonDocument>(indexKeysDefinition);
             _geographies_questions.Indexes.CreateOne(indexModel);
         }
+        // вопросы для Биологии
         public void BiologyQuestions()
         {
             var questions = new BsonDocument[]
@@ -805,6 +851,7 @@ namespace main
                 new CreateIndexModel<BsonDocument>(indexKeysDefinition);
             _biology_questions.Indexes.CreateOne(indexModel);
         }
+        // вопросы для Mix
         public void MixQuestions()
         {
             var questions = new BsonDocument[]
