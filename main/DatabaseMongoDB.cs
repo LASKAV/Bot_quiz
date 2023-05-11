@@ -3,9 +3,11 @@ using System.Collections.ObjectModel;
 using DnsClient;
 using Microsoft.VisualBasic;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Telegram.Bot.Types;
 using ThirdParty.Json.LitJson;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace main
 {
@@ -47,6 +49,7 @@ namespace main
 
             _usersCollection.InsertOne(user);
         }
+
         // добавить user
         public void InsertUser(string UserTgid, DateTime
             Date, string Login, string Password)
@@ -71,6 +74,102 @@ namespace main
             _usersCollection.Indexes.CreateOne(indexModel);
 
         }
+
+        public void InsertUser_history(string UserTgid, DateTime
+            Date)
+        {
+            var usersHistory = new BsonDocument {
+            { "UserID", UserTgid },
+            { "Date_game", Date},
+            { "Points_gameHistory", 0},
+            { "Points_gameGeographies", 0},
+            { "Points_gameBiology", 0},
+            { "Points_gameMix", 0},
+            { "Questions_all", 0 }
+            };
+
+            _usersHistory.InsertOneAsync(usersHistory);
+            // index для UserID 
+            var indexKeysDefinition =
+                Builders<BsonDocument>.IndexKeys.Ascending("UserID");
+            var indexModel =
+                new CreateIndexModel<BsonDocument>(indexKeysDefinition);
+            _usersHistory.Indexes.CreateOne(indexModel);
+        }
+
+        // 📕 Общия статистика 📕
+        public List<BsonDocument> GetUserHistory(string userTgid)
+        {
+            var filter = Builders<BsonDocument>.Filter.Eq("UserID", userTgid);
+            var cursor = _usersHistory.Find(filter).ToCursor();
+            var userHistory = new List<BsonDocument>();
+
+            while (cursor.MoveNext())
+            {
+                foreach (var document in cursor.Current)
+                {
+                    var gameHistory = BsonSerializer.Deserialize<BsonDocument>(document);
+                    userHistory.Add(gameHistory);
+                }
+            }
+
+            return userHistory;
+        }
+
+        public List<BsonDocument> GetAllUserHistory()
+        {
+            var sort = Builders<BsonDocument>.Sort.Combine(
+                Builders<BsonDocument>.Sort.Descending("Points_gameHistory"),
+                Builders<BsonDocument>.Sort.Descending("Points_gameGeographies"),
+                Builders<BsonDocument>.Sort.Descending("Points_gameBiology"),
+                Builders<BsonDocument>.Sort.Descending("Points_gameMix")
+            );
+
+            var cursor = _usersHistory.Find(new BsonDocument()).Sort(sort).ToCursor();
+            var userHistory = new List<BsonDocument>();
+
+            while (cursor.MoveNext())
+            {
+                foreach (var document in cursor.Current)
+                {
+                    var gameHistory = BsonSerializer.Deserialize<BsonDocument>(document);
+                    userHistory.Add(gameHistory);
+                }
+            }
+
+            return userHistory;
+        }
+
+
+
+        // добовляем очки за правильный ответ
+        public void UpdatePoint(string userId,int type_game)
+        {
+            var filter = Builders<BsonDocument>.Filter.Eq("UserID", userId);
+            var update = Builders<BsonDocument>.Update.Inc("Questions_all", 1);
+
+            switch (type_game)
+            {
+                case 0 :
+                    update = Builders<BsonDocument>.Update.Inc("Points_gameHistory", 1);
+                    break;
+                case 1:
+                    update = Builders<BsonDocument>.Update.Inc("Points_gameGeographies", 1);
+                    break;
+                case 2:
+                    update = Builders<BsonDocument>.Update.Inc("Points_gameBiology", 1);
+                    break;
+                case 3:
+                    update = Builders<BsonDocument>.Update.Inc("Points_gameMix", 1);
+                    break;
+                case 4:
+                    update = Builders<BsonDocument>.Update.Inc("Questions_all", 1);
+                    break;
+            }
+            
+            _usersHistory.UpdateOne(filter, update);
+        }
+
         // проверка userID
         public BsonDocument GetUserByUserID(string userID)
         {
@@ -178,6 +277,7 @@ namespace main
 
             return randomCollection;
         }
+
         public void PrintBsonDocuments(IEnumerable<BsonDocument> documents)
         {
             Console.WriteLine("Вопросы: ");
@@ -229,14 +329,8 @@ namespace main
             var update = Builders<BsonDocument>.Update.Inc("Questions", 1);
             _usersCollection.UpdateOne(filter, update);
         }
-        // добовляем очки за правильный ответ
-        public void UpdatePoint(string userId)
-        {
-            var filter = Builders<BsonDocument>.Filter.Eq("UserID", userId);
-            var update = Builders<BsonDocument>.Update.Inc("Points", 1);
-            _usersCollection.UpdateOne(filter, update);
-        }
         
+
         // вопросы для История
         public void HistoryQuestions()
         {

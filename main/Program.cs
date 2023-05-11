@@ -362,6 +362,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
 
     // кнопки
+
     if (message.Text.StartsWith("🎮 Играть 🎮"))
         {
             await bot.SendTextMessageAsync(
@@ -387,11 +388,14 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
     if (message.Text.StartsWith("📈 Статистика 📉"))
     {
-        await bot.SendTextMessageAsync(
+        if (message.Text == "📈 Статистика 📉")
+        {
+            await bot.SendTextMessageAsync(
                 message.Chat.Id,
-                $"<code>🤖 BOT:</code><b> Выбери раздел 📈  </b>",
+                $"<code>🤖 BOT:</code><b> Выбери статистику 📊</b>",
                 replyMarkup: Statistics_menu(),
                 parseMode: ParseMode.Html);
+        }
         users[user_id].Status = Status.userStats;
 
         return;
@@ -417,13 +421,12 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 parseMode: ParseMode.Html,
                 replyMarkup: Game_menu()
                 );
-
-            users[user_id].Status = Status.game;
+        users[user_id].Status = Status.game;
 
             return;
         }
 
-     // состояние бота
+    // состояние бота
 
     if (users.ContainsKey(user_id) && users[user_id].Status == Status.settings)
         // пользователь в menu settings
@@ -507,7 +510,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         {
             if (message.Text.StartsWith("💂‍♀️ История 👩‍🚀"))
             {
-                await bot.SendTextMessageAsync(
+            db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
+            await bot.SendTextMessageAsync(
                 message.Chat.Id,
                 $"<code>🤖 BOT:</code>" +
                 $"<b> Вы выбрали раздел 💂‍♀️ История 👩‍🚀 </b>\n" +
@@ -521,7 +525,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
             }
             if (message.Text.StartsWith("🏛 География ✈️"))
                 {
-                    await bot.SendTextMessageAsync(
+            db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
+            await bot.SendTextMessageAsync(
                     message.Chat.Id,
                     $"<code>🤖 BOT:</code>" +
                     $"<b> Вы выбрали раздел 🏛 География ✈️</b>\n" +
@@ -534,7 +539,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 }
             if (message.Text.StartsWith("🔬 Биология 🦠"))
                 {
-                    await bot.SendTextMessageAsync(
+            db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
+            await bot.SendTextMessageAsync(
                     message.Chat.Id,
                     $"<code>🤖 BOT:</code>" +
                     $"<b> Вы выбрали раздел 🔬 Биология 🦠 </b>\n" +
@@ -547,7 +553,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 }
             if (message.Text.StartsWith("👽 Смешанная 👀"))
                 {
-                    await bot.SendTextMessageAsync(
+            db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
+            await bot.SendTextMessageAsync(
                     message.Chat.Id,
                     $"<code>🤖 BOT:</code>" +
                     $"<b> Вы выбрали раздел 👽 Смешанная 👀 </b>\n" +
@@ -566,7 +573,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
             await bot.SendTextMessageAsync(
             message.Chat.Id,
             $"<code>🤖 BOT:</code>" +
-            $"<b> 🎖 Результаты прошлых викторин 🎖 </b>\n",
+            $"<b> находиться в разроботке  </b>\n",
             replyMarkup: Statistics_menu(),
             parseMode: ParseMode.Html
             );
@@ -576,19 +583,58 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
         if (message.Text.StartsWith("🏆 ТОП - 20 по разделам 🏆"))
         {
-            await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code>" +
-            $"<b> 🏆 ТОП - 20 по разделам 🏆 </b>\n",
-            replyMarkup: Statistics_menu(),
-            parseMode: ParseMode.Html
-            );
+            var stat_user = db.GetAllUserHistory();
 
+            await bot.SendTextMessageAsync(
+                 message.Chat.Id,
+                 $"<code>🤖 BOT:</code>" +
+                 $"<b> 🏆 ТОП - 20 🏆</b>\n",
+                 replyMarkup: Statistics_menu(),
+                 parseMode: ParseMode.Html
+                 );
+            foreach (var gameHistory in stat_user)
+            {
+                await bot.SendTextMessageAsync(
+                 message.Chat.Id,
+                 $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
+                 $"<b>\n\n💂‍♀️ История 👩‍🚀:  {gameHistory["Points_gameHistory"]} очков</b>" +
+                 $"<b>\n\n🏛 География ✈️:  {gameHistory["Points_gameGeographies"]} очков</b>" +
+                 $"<b>\n\n🔬 Биология 🦠:  {gameHistory["Points_gameBiology"]} очков</b>" +
+                 $"<b>\n\n👽 Смешанная 👀:  {gameHistory["Points_gameMix"]} очков</b>",
+                 replyMarkup: Statistics_menu(),
+                 parseMode: ParseMode.Html
+                 );
+
+            }
             users[user_id].Status = Status.userStats;
             return;
-        }
-    }
 
+
+        }
+        if (message.Text.StartsWith("📕 Общия статистика 📕"))
+        {
+           
+          var userHistory = db.GetUserHistory($"{users[user_id].UserTgid}");
+
+            foreach (var gameHistory in userHistory)
+            {
+                await bot.SendTextMessageAsync(
+                 message.Chat.Id,
+                 $"<code>🤖 BOT:</code>" +
+                 $"<b> Общия статистика 📊</b>\n" +
+                 $"<b>\n💂‍♀️ История 👩‍🚀:  {gameHistory["Points_gameHistory"]} очков</b>" +
+                 $"<b>\n\n🏛 География ✈️:  {gameHistory["Points_gameGeographies"]} очков</b>" +
+                 $"<b>\n\n🔬 Биология 🦠:  {gameHistory["Points_gameBiology"]} очков</b>" +
+                 $"<b>\n\n👽 Смешанная 👀:  {gameHistory["Points_gameMix"]} очков</b>",
+                 replyMarkup: Statistics_menu(),
+                 parseMode: ParseMode.Html
+                 );
+                users[user_id].Status = Status.userStats;
+                return;
+            }
+           
+        }    
+    }
 
     if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameHistory)
     {
@@ -603,7 +649,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
 
         db.UpdateQuestions($"{users[user_id].UserTgid}");
-
+        
         foreach (var question in questionsHistory)
         {
             await bot.SendTextMessageAsync(
@@ -796,7 +842,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
             if (db.CheckRandomAnswer(indexq, answer, 0))
             {
-                db.UpdatePoint(users[user_id].UserTgid);
+                db.UpdatePoint(users[user_id].UserTgid,0);
 
                 await bot.SendTextMessageAsync(
                 message.Chat.Id,
@@ -849,7 +895,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
             if (db.CheckRandomAnswer(indexq, answer, 1))
             {
-                db.UpdatePoint(users[user_id].UserTgid);
+                db.UpdatePoint(users[user_id].UserTgid,1);
 
                 await bot.SendTextMessageAsync(
                 message.Chat.Id,
@@ -903,7 +949,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
             if (db.CheckRandomAnswer(indexq, answer, 2))
             {
-                db.UpdatePoint(users[user_id].UserTgid);
+                db.UpdatePoint(users[user_id].UserTgid,2);
 
                 await bot.SendTextMessageAsync(
                 message.Chat.Id,
@@ -957,7 +1003,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
             if (db.CheckRandomAnswer(indexq, answer, 3))
             {
-                db.UpdatePoint(users[user_id].UserTgid);
+                db.UpdatePoint(users[user_id].UserTgid,3);
 
                 await bot.SendTextMessageAsync(
                 message.Chat.Id,
@@ -993,16 +1039,7 @@ async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery callback)
     await bot.SendTextMessageAsync(callback.Message.Chat.Id, $"Нажал {callback.Data}");
     return;
 }
-/*
-    if (message.Text == "📈 Статистика 📉")
-    {
-        await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code><b> Выбери статистику 📊</b>",
-            replyMarkup: Statistics_menu(),
-            parseMode: ParseMode.Html);
-    }
- */
+
 static IReplyMarkup Top_menu()
 {
     //-----------------------------//
@@ -1055,6 +1092,8 @@ static IReplyMarkup Statistics_menu()
         = "🎖 Результаты прошлых викторин 🎖";
     KeyboardButton batton_Statistics_Geography
         = "🏆 ТОП - 20 по разделам 🏆";
+    KeyboardButton batton_Statistics_Geog
+        = "📕 Общия статистика 📕";
     KeyboardButton button_Statistics_Back = "🔙 Назад 🔙";
 
     //-----------------------------//
@@ -1062,6 +1101,7 @@ static IReplyMarkup Statistics_menu()
     ReplyKeyboardMarkup Statistics_menu = new(new[]
       {
     new KeyboardButton[] { batton_Statistics_History, batton_Statistics_Geography },
+    new KeyboardButton[] { batton_Statistics_Geog},
      new KeyboardButton[] { button_Statistics_Back},
     }
       )
