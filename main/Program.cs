@@ -597,7 +597,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
     {
         if (message.Text.StartsWith("💂‍♀️ История 👩‍🚀"))
         {
-            db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
+           // db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
             await bot.SendTextMessageAsync(
                 message.Chat.Id,
                 $"<code>🤖 BOT:</code>" +
@@ -612,7 +612,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
         if (message.Text.StartsWith("🏛 География ✈️"))
         {
-            db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
+           // db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
             await bot.SendTextMessageAsync(
                     message.Chat.Id,
                     $"<code>🤖 BOT:</code>" +
@@ -626,7 +626,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
         if (message.Text.StartsWith("🔬 Биология 🦠"))
         {
-            db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
+          //  db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
             await bot.SendTextMessageAsync(
                     message.Chat.Id,
                     $"<code>🤖 BOT:</code>" +
@@ -640,7 +640,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
         if (message.Text.StartsWith("👽 Смешанная 👀"))
         {
-            db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
+           // db.InsertUser_history($"{users[user_id].UserTgid}", DateTime.UtcNow);
             await bot.SendTextMessageAsync(
                     message.Chat.Id,
                     $"<code>🤖 BOT:</code>" +
@@ -726,7 +726,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 users[user_id].Status = Status.userStats;
                 return;
             }
-
+            users[user_id].Status = Status.userStats;
+            return;
         }
     }
 
