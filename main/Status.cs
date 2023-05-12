@@ -21,7 +21,8 @@ namespace main
         gameAnswerGeographies = 14,
         gameAnswerBiology = 15,
         gameAnswerMix = 16,
-        userStats = 17
+        userStats = 17,
+        userСhoosesStats = 18
 
     }
 }

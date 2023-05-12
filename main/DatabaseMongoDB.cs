@@ -51,29 +51,39 @@ namespace main
         }
 
         // добавить user
-        public void InsertUser(string UserTgid, DateTime
-            Date, string Login, string Password)
+        public bool InsertUser(string UserTgid, DateTime Date, string Login, string Password)
         {
-            BsonDateTime bsonDate = new BsonDateTime(Date);
+            var filter = Builders<BsonDocument>.Filter.Eq("Login", Login);
+            var existingUser = _usersCollection.Find(filter).FirstOrDefault();
 
-            var user = new BsonDocument {
+            if (existingUser == null)
+            {
+                var bsonDate = new BsonDateTime(Date);
+
+                var user = new BsonDocument
+        {
             { "UserID", UserTgid },
             { "Login",  Login },
             { "Password", Password },
-            { "Age", Date},
-            { "Points", 0},
+            { "Age", bsonDate },
+            { "Points", 0 },
             { "Questions", 0 }
-            };
+        };
 
-            _usersCollection.InsertOne(user);
-            // index для UserID 
-            var indexKeysDefinition =
-                Builders<BsonDocument>.IndexKeys.Ascending("UserID");
-            var indexModel =
-                new CreateIndexModel<BsonDocument>(indexKeysDefinition);
-            _usersCollection.Indexes.CreateOne(indexModel);
+                _usersCollection.InsertOne(user);
 
+                var indexKeysDefinition = Builders<BsonDocument>.IndexKeys.Ascending("UserID");
+                var indexModel = new CreateIndexModel<BsonDocument>(indexKeysDefinition);
+                _usersCollection.Indexes.CreateOne(indexModel);
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
+
 
         public void InsertUser_history(string UserTgid, DateTime
             Date)
@@ -140,8 +150,6 @@ namespace main
             return userHistory;
         }
 
-
-
         // добовляем очки за правильный ответ
         public void UpdatePoint(string userId,int type_game)
         {
@@ -168,6 +176,27 @@ namespace main
             }
             
             _usersHistory.UpdateOne(filter, update);
+        }
+        public BsonDocument GetUserInfo(string userID)
+        {
+            var filter = Builders<BsonDocument>.Filter.Eq("UserID", userID);
+            var projection = Builders<BsonDocument>.Projection.Include("Login").Include("Password").Include("Age");
+            var user = _usersCollection.Find(filter).Project(projection).FirstOrDefault();
+
+            if (user == null)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"UserID: {userID} не найден");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"UserID: {userID} найден");
+                Console.ResetColor();
+            }
+
+            return user;
         }
 
         // проверка userID
@@ -330,7 +359,6 @@ namespace main
             _usersCollection.UpdateOne(filter, update);
         }
         
-
         // вопросы для История
         public void HistoryQuestions()
         {

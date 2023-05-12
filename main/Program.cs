@@ -19,6 +19,8 @@ using System.Data;
 using System.Runtime.InteropServices;
 using System.Net.Sockets;
 using System.Collections.Generic;
+using DnsClient;
+using System.Text.RegularExpressions;
 
 
 // Подключаем бота через свой API key
@@ -83,8 +85,10 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
             $"\nlastName: {lastName}");
 
 
-        if (db.GetUserByUserID($"{userID}") == null)
+        if (db.GetUserByUserID($"{userID}") is null)
         {
+            users.TryAdd($"{userID}", new main.User());
+           
             if (!users.TryAdd($"{userID}", new main.User()))
             {
                 await HandleMesssageLogger(bot, update.Message, $"{userID}");
@@ -93,6 +97,7 @@ async Task Update(ITelegramBotClient bot,Update update,CancellationToken Token)
         }
         else
         {
+            users.TryAdd($"{userID}", new main.User());
             if (!users.TryAdd($"{userID}", new main.User()))
             {
                 await HandleMesssage(bot, update.Message, $"{userID}");
@@ -134,7 +139,7 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
         message.Chat.Id,
         $"<code>🤖 BOT: </code> " +
         $"<b>Привет {message.From.FirstName} 👋</b>" +
-        $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
+        $"\n<b>Для игры вам нужно пройти простую регистрацию</b>",
         replyMarkup: Logger(),
         parseMode: ParseMode.Html);
 
@@ -192,25 +197,40 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
                 users[user_id].Date != DateTime.MinValue)
             {
 
-               await bot.SendTextMessageAsync(message.Chat.Id,
-                      $"<code>🤖 BOT: </code> " +
-                      "<b>Регистрация прошла успешно!✅</b>",
-                      parseMode: ParseMode.Html);
-               await bot.SendTextMessageAsync(
-                  message.Chat.Id,
-                  empty.MainOffice,
-                  replyMarkup: Top_menu(),
-                  parseMode: ParseMode.Html
-                  );
-
-               db.InsertUser(
+               bool login_verification =  db.InsertUser(
                    users[user_id].UserTgid,
                    users[user_id].Date,
                    users[user_id].Login,
                    users[user_id].Password);
+                if (users.ContainsKey(user_id) && login_verification is true)
+                {
+                    await bot.SendTextMessageAsync(message.Chat.Id,
+                     $"<code>🤖 BOT: </code> " +
+                     "<b>Регистрация прошла успешно!✅</b>",
+                     parseMode: ParseMode.Html);
+                    await bot.SendTextMessageAsync(
+                       message.Chat.Id,
+                       empty.MainOffice,
+                       replyMarkup: Top_menu(),
+                       parseMode: ParseMode.Html
+                       );
 
-                users[user_id].Status = Status.defaul;
-                return;
+                    users[user_id].Status = Status.defaul;
+                    return;
+                }
+                else
+                {
+                    await bot.SendTextMessageAsync(message.Chat.Id,
+                    $"<code>🤖 BOT:</code>" +
+                    "<b> Такой логин уже есть введите новый 🚫</b>",
+                    parseMode: ParseMode.Html,
+                    replyMarkup: Logger());
+
+                    users[user_id].Status = Status.defaul;
+                    return;
+                }
+
+                
             }
             else
             {
@@ -230,31 +250,55 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
     if (users.ContainsKey(user_id) && users[user_id].Status == Status.login)
     {
         string login = message.Text;
+        var regex = new Regex("[\uD800-\uDFFF]");
 
-            Console.WriteLine(status);
-
-            Console.WriteLine($"login = {login}");
+        if (regex.IsMatch(login))
+        {
+            // Если сообщение содержит смайлики, то вывести сообщение об ошибке
             await bot.SendTextMessageAsync(message.Chat.Id,
-                 $"<code>🤖 BOT: </code> " +
-                $"<b>Логин сохранен: {login}✅ </b>",
+                 $"<code>🤖 BOT:</code> " +
+                $"<b>Логин не должно содержать смайликов</b>",
                  replyMarkup: Logger(),
                  parseMode: ParseMode.Html);
+
+            users[user_id].Status = Status.defaul;
+            return;
+        }
+
+        Console.WriteLine(status);
+
+        Console.WriteLine($"login = {login}");
+        await bot.SendTextMessageAsync(message.Chat.Id,
+             $"<code>🤖 BOT: </code> " +
+            $"<b>Логин сохранен: {login}✅ </b>",
+             replyMarkup: Logger(),
+             parseMode: ParseMode.Html);
 
         users[user_id].Login = login;
 
         users[user_id].Status = Status.defaul;
 
         return;
-
-            
     }
+
     // пользователь вводит логин
     if (users.ContainsKey(user_id) && users[user_id].Status == Status.password)
     {
         string password = message.Text;
+        var regex = new Regex("[\uD800-\uDFFF]");
 
+        if (regex.IsMatch(password))
+        {
+            // Если сообщение содержит смайлики, то вывести сообщение об ошибке
+            await bot.SendTextMessageAsync(message.Chat.Id,
+                 $"<code>🤖 BOT:</code> " +
+                $"<b>Пароль не должно содержать смайликов</b>",
+                 replyMarkup: Logger(),
+                 parseMode: ParseMode.Html);
+            return;
+        }
 
-            Console.WriteLine($"password = {password}");
+        Console.WriteLine($"password = {password}");
             await bot.SendTextMessageAsync(message.Chat.Id,
                  $"<code>🤖 BOT: </code> " +
                 $"<b>Пароль сохранен: {password}✅</b>",
@@ -315,7 +359,7 @@ async Task HandleMesssageLogger (ITelegramBotClient bot, Message message, string
         message.Chat.Id,
         $"<code>🤖 BOT: </code> " +
         $"<b>Привет {message.From.FirstName} 👋</b>" +
-        $"\n<b>Для игры вам нужно пройти простую аторизацию</b>",
+        $"\n<b>Для игры вам нужно пройти простую регистрацию</b>",
         replyMarkup: Logger(),
         parseMode: ParseMode.Html);
 
@@ -412,7 +456,7 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
             return;
         }
-    if (message.Text.StartsWith("Отсановить игру"))
+    if (message.Text.StartsWith("💢 Отсановить игру 💢"))
         {
             await bot.SendTextMessageAsync(
                 message.Chat.Id,
@@ -456,7 +500,28 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 users[user_id].Status = Status.birthdayСhange;
                 return;
             }
+            if (message.Text.StartsWith("📥 Данные аккаунта 📥"))
+            {
+            var user_info = db.GetUserInfo($"{users[user_id].UserTgid}");
+
+                var age = DateTime.Parse(user_info["Age"].ToString());
+                var ageStr = age.ToString("dd.MM.yyyy");
+
+                await bot.SendTextMessageAsync(
+                    message.Chat.Id,
+                    $"<code>🤖 BOT:</code><b> Данные пользователя 🔎</b> " +
+                    $"<b>\n\n\nLogin: {user_info["Login"]}</b>" +
+                    $"<b>\n\nPassword: {user_info["Password"]}</b>" +
+                    $"<b>\n\nAge: {ageStr}</b>",
+                    replyMarkup: Settings_menu(),
+                    parseMode: ParseMode.Html
+                );
+                users[user_id].Status = Status.settings;
+                return;
+
+
         }
+    }
     if (users.ContainsKey(user_id) && users[user_id].Status == Status.birthdayСhange)
         {
             string date = message.Text;
@@ -495,10 +560,27 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
     if (users.ContainsKey(user_id) && users[user_id].Status == Status.passwordChang) // пользователь новый пароль
         {
             string newPassword = message.Text;
-            db.UpdateUserPassword(users[user_id].UserTgid, newPassword);
+
+            var regex = new Regex("[\uD800-\uDFFF]");
+
+            if(regex.IsMatch(newPassword))
+            {
+                // Если сообщение содержит смайлики, то вывести сообщение об ошибке
+                await bot.SendTextMessageAsync(message.Chat.Id,
+                     $"<code>🤖 BOT:</code> " +
+                    $"<b>Пароль не должно содержать смайликов</b>",
+                     replyMarkup: Settings_menu(),
+
+                     parseMode: ParseMode.Html);
+                users[user_id].Status = Status.settings;
+                return;
+            }
+
+        db.UpdateUserPassword(users[user_id].UserTgid, newPassword);
             await bot.SendTextMessageAsync(
             message.Chat.Id,
             $"<code>🤖 BOT:</code><b> Пароль был изменен на {newPassword}✅</b> ",
+            replyMarkup: Settings_menu(),
             parseMode: ParseMode.Html
             );
 
@@ -583,33 +665,16 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
         if (message.Text.StartsWith("🏆 ТОП - 20 по разделам 🏆"))
         {
-            var stat_user = db.GetAllUserHistory();
 
             await bot.SendTextMessageAsync(
                  message.Chat.Id,
                  $"<code>🤖 BOT:</code>" +
-                 $"<b> 🏆 ТОП - 20 🏆</b>\n",
-                 replyMarkup: Statistics_menu(),
+                 $"<b>Выбери раздел </b>\n",
+                 replyMarkup: Game_menu(),
                  parseMode: ParseMode.Html
                  );
-            foreach (var gameHistory in stat_user)
-            {
-                await bot.SendTextMessageAsync(
-                 message.Chat.Id,
-                 $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
-                 $"<b>\n\n💂‍♀️ История 👩‍🚀:  {gameHistory["Points_gameHistory"]} очков</b>" +
-                 $"<b>\n\n🏛 География ✈️:  {gameHistory["Points_gameGeographies"]} очков</b>" +
-                 $"<b>\n\n🔬 Биология 🦠:  {gameHistory["Points_gameBiology"]} очков</b>" +
-                 $"<b>\n\n👽 Смешанная 👀:  {gameHistory["Points_gameMix"]} очков</b>",
-                 replyMarkup: Statistics_menu(),
-                 parseMode: ParseMode.Html
-                 );
-
-            }
-            users[user_id].Status = Status.userStats;
+            users[user_id].Status = Status.userСhoosesStats;
             return;
-
-
         }
         if (message.Text.StartsWith("📕 Общия статистика 📕"))
         {
@@ -634,6 +699,106 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
             }
            
         }    
+    }
+
+    if (users.ContainsKey(user_id) && users[user_id].Status == Status.userСhoosesStats)
+    {
+        if (message.Text.StartsWith("💂‍♀️ История 👩‍🚀"))
+        {
+            var stat_user = db.GetAllUserHistory();
+
+            await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b> Вы выбрали раздел 💂‍♀️ История 👩‍🚀 </b>\n",
+                replyMarkup: Game_menu(),
+                parseMode: ParseMode.Html
+                );
+             foreach (var gameHistory in stat_user)
+             {
+                 await bot.SendTextMessageAsync(
+                  message.Chat.Id,
+                  $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
+                  $"<b>\n\n💂‍♀️ История 👩‍🚀:  {gameHistory["Points_gameHistory"]} очков</b>",
+                  parseMode: ParseMode.Html
+                  );
+             
+             }
+            users[user_id].Status = Status.userСhoosesStats;
+            return;
+        }
+        if (message.Text.StartsWith("🏛 География ✈️"))
+        {
+            var stat_user = db.GetAllUserHistory();
+
+            await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b> Вы выбрали раздел 🏛 География ✈️ </b>\n",
+                replyMarkup: Game_menu(),
+                parseMode: ParseMode.Html
+                );
+            foreach (var gameHistory in stat_user)
+            {
+                await bot.SendTextMessageAsync(
+                 message.Chat.Id,
+                 $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
+                 $"<b>\n\n🏛 География ✈️:  {gameHistory["Points_gameGeographies"]} очков</b>",
+                 parseMode: ParseMode.Html
+                 );
+
+            }
+            users[user_id].Status = Status.userСhoosesStats;
+            return;
+        }
+        if (message.Text.StartsWith("🔬 Биология 🦠"))
+        {
+            var stat_user = db.GetAllUserHistory();
+
+            await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b> Вы выбрали раздел 🔬 Биология 🦠 </b>\n",
+                replyMarkup: Game_menu(),
+                parseMode: ParseMode.Html
+                );
+            foreach (var gameHistory in stat_user)
+            {
+                await bot.SendTextMessageAsync(
+                 message.Chat.Id,
+                 $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
+                 $"<b>\n\n🔬 Биология 🦠:  {gameHistory["Points_gameBiology"]} очков</b>",
+                 parseMode: ParseMode.Html
+                 );
+
+            }
+            users[user_id].Status = Status.userСhoosesStats;
+            return;
+        }
+        if (message.Text.StartsWith("👽 Смешанная 👀"))
+        {
+            var stat_user = db.GetAllUserHistory();
+
+            await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b> Вы выбрали раздел 👽 Смешанная 👀 </b>\n",
+                replyMarkup: Game_menu(),
+                parseMode: ParseMode.Html
+                );
+            foreach (var gameHistory in stat_user)
+            {
+                await bot.SendTextMessageAsync(
+                 message.Chat.Id,
+                 $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
+                 $"<b>\n\n👽 Смешанная 👀:  {gameHistory["Points_gameMix"]} очков</b>",
+                 parseMode: ParseMode.Html
+                 );
+
+            }
+            users[user_id].Status = Status.userСhoosesStats;
+            return;
+        }
     }
 
     if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameHistory)
@@ -1118,6 +1283,8 @@ static IReplyMarkup Settings_menu()
         = "🔧 Смена пароля 🔧";
     KeyboardButton batton_Settings_dates
         = "👶 Смена даты рождения 👶";
+    KeyboardButton batton_Settings_data
+        = "📥 Данные аккаунта 📥";
     KeyboardButton batton_Settings_Back = "🔙 Назад 🔙";
 
     //-----------------------------//
@@ -1125,6 +1292,7 @@ static IReplyMarkup Settings_menu()
     ReplyKeyboardMarkup Settings_menu = new(new[]
       {
     new KeyboardButton[] { batton_Settings_pass, batton_Settings_dates },
+    new KeyboardButton[] { batton_Settings_data},
      new KeyboardButton[] { batton_Settings_Back},
     }
       )
@@ -1164,7 +1332,7 @@ static IReplyMarkup Logger()
 static IReplyMarkup Geme_History_start()
 {
     KeyboardButton batton_Logger_login
-        = "Начать игру ";
+        = "▶️ Начать игру ▶️";
     KeyboardButton batton_Logger_
         = "🔙 Назад 🔙 ";
 
@@ -1212,9 +1380,9 @@ static IReplyMarkup Geme_History_Answer
 static IReplyMarkup Geme_History_process()
 {
     KeyboardButton batton_Logger_login
-        = "Дальше";
+        = "🔥 Дальше 🔥";
     KeyboardButton batton_Logger_
-        = "Отсановить игру";
+        = "💢 Отсановить игру 💢";
 
     //-----------------------------//
 
