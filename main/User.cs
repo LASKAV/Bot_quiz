@@ -9,6 +9,8 @@ namespace main
         public string Password { get; set; }
         public Status Status { get; set; }
         public int IdQuse { get; set; }
+        public int questionCount { get; set; }
+        public int questionGood { get; set; }
 
         public User() { }
 

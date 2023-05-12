@@ -458,16 +458,21 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
     if (message.Text.StartsWith("💢 Отсановить игру 💢"))
         {
-            await bot.SendTextMessageAsync(
-                message.Chat.Id,
-                $"<code>🤖 BOT:</code>" +
-                $"<b>Игра окончена! </b>\n",
-                parseMode: ParseMode.Html,
-                replyMarkup: Game_menu()
-                );
-        users[user_id].Status = Status.game;
+        Console.WriteLine($"questionGood {users[user_id].questionGood}");
 
-            return;
+         await bot.SendTextMessageAsync(
+         message.Chat.Id,
+         $"<code>🤖 BOT:</code>" +
+         $"<b>Игра окончена! </b>\n",
+         parseMode: ParseMode.Html,
+         replyMarkup: Game_menu()
+         );
+
+         users[user_id].questionGood = 0;
+         users[user_id].questionCount = 0;
+         users[user_id].Status = Status.game;
+
+             return;
         }
 
     // состояние бота
@@ -814,9 +819,93 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
 
         db.UpdateQuestions($"{users[user_id].UserTgid}");
-        
         foreach (var question in questionsHistory)
         {
+            Console.WriteLine($"questionCount : {users[user_id].questionCount}");
+            users[user_id].questionCount++;
+
+            if (users[user_id].questionCount >= 21)
+            {
+
+                if (users[user_id].questionGood >= 18 && users[user_id].questionGood <= 20)
+                {
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                        $"<code>🤖 BOT:</code>" +
+                        $"<b>Игра окончена! </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥇 18 - 20  правильных ответов 🎊 </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                else if (users[user_id].questionGood >= 11 && users[user_id].questionGood <= 17)
+                {
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                        $"<code>🤖 BOT:</code>" +
+                        $"<b>Игра окончена! </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥈 11 - 17  правильных ответов </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                else if (users[user_id].questionGood >= 1 && users[user_id].questionGood <= 10)
+                {
+                    await bot.SendTextMessageAsync(
+                       message.Chat.Id,
+                       $"<code>🤖 BOT:</code>" +
+                       $"<b>Игра окончена! </b>\n",
+                       parseMode: ParseMode.Html,
+                       replyMarkup: Game_menu()
+                       );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥉 1  - 10  правильных ответов </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                users[user_id].Status = Status.game;
+
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b>Игра окончена! </b>\n",
+                parseMode: ParseMode.Html,
+                replyMarkup: Game_menu()
+                );
+
+                return;
+            }
+
             await bot.SendTextMessageAsync(
             message.Chat.Id,
             $"<code>🤖 BOT:</code>" +
@@ -827,23 +916,14 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
             question["badQuestion2"].ToString(), question["badQuestion3"].ToString())
             );
             Console.WriteLine($"ID вопроса {question["id"]}");
+            
 
             users[user_id].Status = Status.gameAnswerHistory;
             users[user_id].IdQuse = (int)question["id"];
 
             return;
         }
-             await bot.SendTextMessageAsync(
-             message.Chat.Id,
-             $"<code>🤖 BOT:</code>" +
-             $"<b>Игра окончена! </b>\n",
-             parseMode: ParseMode.Html,
-             replyMarkup: Game_menu()
-             );
-
-             users[user_id].Status = Status.game;
-
-             return;
+            
     }
     if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameGeographies)
     {
@@ -861,6 +941,89 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
         foreach (var question in questionsGeographies)
         {
+            Console.WriteLine($"questionCount : {users[user_id].questionCount}");
+            users[user_id].questionCount++;
+
+            if (users[user_id].questionCount >= 21)
+            {
+                if (users[user_id].questionGood >= 18 && users[user_id].questionGood <= 20)
+                {
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                        $"<code>🤖 BOT:</code>" +
+                        $"<b>Игра окончена! </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥇 18 - 20  правильных ответов 🎊 </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                else if (users[user_id].questionGood >= 11 && users[user_id].questionGood <= 17)
+                {
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                        $"<code>🤖 BOT:</code>" +
+                        $"<b>Игра окончена! </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥈 11 - 17  правильных ответов </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                else if (users[user_id].questionGood >= 1 && users[user_id].questionGood <= 10)
+                {
+                    await bot.SendTextMessageAsync(
+                       message.Chat.Id,
+                       $"<code>🤖 BOT:</code>" +
+                       $"<b>Игра окончена! </b>\n",
+                       parseMode: ParseMode.Html,
+                       replyMarkup: Game_menu()
+                       );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥉 1  - 10  правильных ответов </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b>Игра окончена! </b>\n",
+                parseMode: ParseMode.Html,
+                replyMarkup: Game_menu()
+                );
+
+                users[user_id].Status = Status.game;
+
+                return;
+            }
             await bot.SendTextMessageAsync(
             message.Chat.Id,
             $"<code>🤖 BOT:</code>" +
@@ -877,17 +1040,6 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
             return;
         }
-        await bot.SendTextMessageAsync(
-        message.Chat.Id,
-        $"<code>🤖 BOT:</code>" +
-        $"<b>Игра окончена! </b>\n",
-        parseMode: ParseMode.Html,
-        replyMarkup: Game_menu()
-        );
-
-        users[user_id].Status = Status.game;
-
-        return;
     }
     if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameBiology)
     {
@@ -905,6 +1057,89 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
         foreach (var question in questionsBiology)
         {
+            Console.WriteLine($"questionCount : {users[user_id].questionCount}");
+            users[user_id].questionCount++;
+
+            if (users[user_id].questionCount >= 21)
+            {
+                if (users[user_id].questionGood >= 18 && users[user_id].questionGood <= 20)
+                {
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                        $"<code>🤖 BOT:</code>" +
+                        $"<b>Игра окончена! </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥇 18 - 20  правильных ответов 🎊 </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                else if (users[user_id].questionGood >= 11 && users[user_id].questionGood <= 17)
+                {
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                        $"<code>🤖 BOT:</code>" +
+                        $"<b>Игра окончена! </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥈 11 - 17  правильных ответов </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                else if (users[user_id].questionGood >= 1 && users[user_id].questionGood <= 10)
+                {
+                    await bot.SendTextMessageAsync(
+                       message.Chat.Id,
+                       $"<code>🤖 BOT:</code>" +
+                       $"<b>Игра окончена! </b>\n",
+                       parseMode: ParseMode.Html,
+                       replyMarkup: Game_menu()
+                       );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥉 1  - 10  правильных ответов </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b>Игра окончена! </b>\n",
+                parseMode: ParseMode.Html,
+                replyMarkup: Game_menu()
+                );
+
+                users[user_id].Status = Status.game;
+
+                return;
+            }
             await bot.SendTextMessageAsync(
             message.Chat.Id,
             $"<code>🤖 BOT:</code>" +
@@ -920,17 +1155,6 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
             users[user_id].IdQuse = (int)question["id"];
             return;
         }
-        await bot.SendTextMessageAsync(
-        message.Chat.Id,
-        $"<code>🤖 BOT:</code>" +
-        $"<b>Игра окончена! </b>\n",
-        parseMode: ParseMode.Html,
-        replyMarkup: Game_menu()
-        );
-
-        users[user_id].Status = Status.game;
-
-        return;
     }
     if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameMix)
     {
@@ -948,6 +1172,90 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
         foreach (var question in questionsMix)
         {
+            Console.WriteLine($"questionCount : {users[user_id].questionCount}");
+            users[user_id].questionCount++;
+
+            if (users[user_id].questionCount >= 21)
+            {
+                if (users[user_id].questionGood >= 18 && users[user_id].questionGood <= 20)
+                {
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                        $"<code>🤖 BOT:</code>" +
+                        $"<b>Игра окончена! </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥇 18 - 20  правильных ответов 🎊 </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                else if (users[user_id].questionGood >= 11 && users[user_id].questionGood <= 17)
+                {
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                        $"<code>🤖 BOT:</code>" +
+                        $"<b>Игра окончена! </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥈 11 - 17  правильных ответов </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                else if (users[user_id].questionGood >= 1 && users[user_id].questionGood <= 10)
+                {
+                    await bot.SendTextMessageAsync(
+                       message.Chat.Id,
+                       $"<code>🤖 BOT:</code>" +
+                       $"<b>Игра окончена! </b>\n",
+                       parseMode: ParseMode.Html,
+                       replyMarkup: Game_menu()
+                       );
+                    await bot.SendTextMessageAsync(
+                        message.Chat.Id,
+                       $"<b>🏆 Награда 🏆 </b>\n" +
+                       $"<b>\n\n🥉 1  - 10  правильных ответов </b>\n",
+                        parseMode: ParseMode.Html,
+                        replyMarkup: Game_menu()
+                        );
+                    users[user_id].questionGood = 0;
+                    users[user_id].questionCount = 0;
+                    users[user_id].Status = Status.game;
+
+                    return;
+                }
+                await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b>Игра окончена! </b>\n",
+                parseMode: ParseMode.Html,
+                replyMarkup: Game_menu()
+                );
+
+                users[user_id].Status = Status.game;
+
+                return;
+            }
+
             await bot.SendTextMessageAsync(
             message.Chat.Id,
             $"<code>🤖 BOT:</code>" +
@@ -963,17 +1271,6 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
             users[user_id].IdQuse = (int)question["id"];
             return;
         }
-        await bot.SendTextMessageAsync(
-        message.Chat.Id,
-        $"<code>🤖 BOT:</code>" +
-        $"<b>Игра окончена! </b>\n",
-        parseMode: ParseMode.Html,
-        replyMarkup: Game_menu()
-        );
-
-        users[user_id].Status = Status.game;
-
-        return;
     }
 
     if (users.ContainsKey(user_id) && users[user_id].Status == Status.gameAnswerHistory)
@@ -1015,7 +1312,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 $"<b> Правильно ✅ </b>\n",
                 parseMode: ParseMode.Html
                 );
-
+                users[user_id].questionGood++;
+                Console.WriteLine($"questionGood {users[user_id].questionGood}");
                 users[user_id].Status = Status.gameHistory;
                 return;
             }
@@ -1068,8 +1366,9 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 $"<b> Правильно ✅ </b>\n",
                 parseMode: ParseMode.Html
                 );
-
-                users[user_id].Status = Status.gameGeographies;
+            users[user_id].questionGood++;
+            Console.WriteLine($"questionGood {users[user_id].questionGood}");
+            users[user_id].Status = Status.gameGeographies;
                 return;
             }
             else
@@ -1123,7 +1422,9 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 parseMode: ParseMode.Html
                 );
 
-                users[user_id].Status = Status.gameBiology;
+            users[user_id].questionGood++;
+            Console.WriteLine($"questionGood {users[user_id].questionGood}");
+            users[user_id].Status = Status.gameBiology;
                 return;
             }
             else
@@ -1176,8 +1477,9 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 $"<b> Правильно ✅ </b>\n",
                 parseMode: ParseMode.Html
                 );
-
-                users[user_id].Status = Status.gameMix;
+            users[user_id].questionGood++;
+            Console.WriteLine($"questionGood {users[user_id].questionGood}");
+            users[user_id].Status = Status.gameMix;
                 return;
             }
             else
