@@ -35,7 +35,6 @@ namespace main
             // BiologyQuestions();
             // MixQuestions();
         }
-
         public void Iuser(string UserTgid)
         {
             var user = new BsonDocument {
@@ -49,7 +48,6 @@ namespace main
 
             _usersCollection.InsertOne(user);
         }
-
         // добавить user
         public bool InsertUser(string UserTgid, DateTime Date, string Login, string Password)
         {
@@ -83,12 +81,16 @@ namespace main
                 return false;
             }
         }
-
-
-        public void InsertUser_history(string UserTgid, DateTime
-            Date)
+        // добавить историю
+        public void InsertUser_history(string UserTgid, DateTime Date)
         {
-            var usersHistory = new BsonDocument {
+            var filter = Builders<BsonDocument>.Filter.Eq("UserID", UserTgid);
+
+            var userHistory = _usersHistory.Find(filter).FirstOrDefault();
+            if (userHistory == null)
+            {
+                userHistory = new BsonDocument
+        {
             { "UserID", UserTgid },
             { "Date_game", Date},
             { "Points_gameHistory", 0},
@@ -96,17 +98,15 @@ namespace main
             { "Points_gameBiology", 0},
             { "Points_gameMix", 0},
             { "Questions_all", 0 }
-            };
+        };
+                _usersHistory.InsertOne(userHistory);
+            }
 
-            _usersHistory.InsertOneAsync(usersHistory);
             // index для UserID 
-            var indexKeysDefinition =
-                Builders<BsonDocument>.IndexKeys.Ascending("UserID");
-            var indexModel =
-                new CreateIndexModel<BsonDocument>(indexKeysDefinition);
+            var indexKeysDefinition = Builders<BsonDocument>.IndexKeys.Ascending("UserID");
+            var indexModel = new CreateIndexModel<BsonDocument>(indexKeysDefinition);
             _usersHistory.Indexes.CreateOne(indexModel);
         }
-
         // 📕 Общия статистика 📕
         public List<BsonDocument> GetUserHistory(string userTgid)
         {
@@ -125,7 +125,42 @@ namespace main
 
             return userHistory;
         }
+        // добавить игры пользователя 
+        public void EndGame(string userId, DateTime date, int gameType, int points)
+        {
+             var document = new BsonDocument
+             {
+                 { "UserID", userId },
+                 { "Date_game", date },
+                 { "Points_gameHistory", 0 },
+                 { "Points_gameGeographies", 0 },
+                 { "Points_gameBiology", 0 },
+                 { "Points_gameMix", 0 },
+                 { "Questions_all", 0 }
+             };
 
+            switch (gameType)
+            {
+                case 1:
+                    document["Points_gameHistory"] = points;
+                    break;
+                case 2:
+                    document["Points_gameGeographies"] = points;
+                    break;
+                case 3:
+                    document["Points_gameBiology"] = points;
+                    break;
+                case 4:
+                    document["Points_gameMix"] = points;
+                    break;
+                default:
+                    throw new ArgumentException("Invalid game type.");
+            }
+
+            // Добавляем документ в коллекцию истории пользователей
+            _usersHistory.InsertOne(document);
+        }
+        // вывод статистики пользователей
         public List<BsonDocument> GetAllUserHistory()
         {
             var sort = Builders<BsonDocument>.Sort.Combine(
@@ -149,16 +184,15 @@ namespace main
 
             return userHistory;
         }
-
         // добовляем очки за правильный ответ
-        public void UpdatePoint(string userId,int type_game)
+        public void UpdatePoint(string userId, int type_game)
         {
             var filter = Builders<BsonDocument>.Filter.Eq("UserID", userId);
             var update = Builders<BsonDocument>.Update.Inc("Questions_all", 1);
 
             switch (type_game)
             {
-                case 0 :
+                case 0:
                     update = Builders<BsonDocument>.Update.Inc("Points_gameHistory", 1);
                     break;
                 case 1:
@@ -174,9 +208,10 @@ namespace main
                     update = Builders<BsonDocument>.Update.Inc("Questions_all", 1);
                     break;
             }
-            
+
             _usersHistory.UpdateOne(filter, update);
         }
+        // проврека Login
         public BsonDocument GetUserInfo(string userID)
         {
             var filter = Builders<BsonDocument>.Filter.Eq("UserID", userID);
@@ -198,7 +233,6 @@ namespace main
 
             return user;
         }
-
         // проверка userID
         public BsonDocument GetUserByUserID(string userID)
         {
@@ -287,7 +321,20 @@ namespace main
             }
 
             var random = new Random();
-            var selectedQuestions = questions.OrderBy(q => random.Next()).Take(count).ToList();
+            var selectedQuestions = new List<BsonDocument>();
+            var selectedQuestionIds = new List<int>();
+
+            while (selectedQuestions.Count < count)
+            {
+                var randomQuestion = questions.OrderBy(q => random.Next()).First();
+                var randomQuestionId = (int)randomQuestion["id"];
+
+                if (!selectedQuestionIds.Contains(randomQuestionId))
+                {
+                    selectedQuestions.Add(randomQuestion);
+                    selectedQuestionIds.Add(randomQuestionId);
+                }
+            }
 
             var randomCollection = new List<BsonDocument>();
             foreach (var question in selectedQuestions)
@@ -300,13 +347,11 @@ namespace main
                 randomQuestion.Add("badQuestion2", question["badQuestion2"]);
                 randomQuestion.Add("badQuestion3", question["badQuestion3"]);
                 randomCollection.Add(randomQuestion);
-                
             }
-            // PrintBsonDocuments(randomCollection);
 
             return randomCollection;
         }
-
+        // проврека вопросов
         public void PrintBsonDocuments(IEnumerable<BsonDocument> documents)
         {
             Console.WriteLine("Вопросы: ");
@@ -350,7 +395,6 @@ namespace main
                 return false;
             }
         }
-
         // добовляем очки вопросов
         public void UpdateQuestions(string userId)
         {
@@ -358,7 +402,6 @@ namespace main
             var update = Builders<BsonDocument>.Update.Inc("Questions", 1);
             _usersCollection.UpdateOne(filter, update);
         }
-        
         // вопросы для История
         public void HistoryQuestions()
         {

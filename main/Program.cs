@@ -657,17 +657,39 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
     {
         if (message.Text.StartsWith("🎖 Результаты прошлых викторин 🎖"))
         {
+            var userHistory = db.GetUserHistory($"{users[user_id].UserTgid}");
             await bot.SendTextMessageAsync(
-            message.Chat.Id,
-            $"<code>🤖 BOT:</code>" +
-            $"<b> находиться в разроботке  </b>\n",
-            replyMarkup: Statistics_menu(),
-            parseMode: ParseMode.Html
+                message.Chat.Id,
+                $"<code>🤖 BOT:</code>" +
+                $"<b>🎲 Прошлые игры 🎲</b>\n",
+                replyMarkup: Statistics_menu(),
+                parseMode: ParseMode.Html
             );
+
+            foreach (var gameHistory in userHistory)
+            {
+                var age = DateTime.Parse(gameHistory["Date_game"].ToString());
+                var ageStr = age.ToString("dd.MM.yyyy");
+
+                var messageText = 
+                    (gameHistory["Points_gameHistory"].AsInt32 > 0 ? $"<b>\n💂‍♀️ История 👩‍🚀:  {gameHistory["Points_gameHistory"]} очков</b>" : "") +
+                    (gameHistory["Points_gameGeographies"].AsInt32 > 0 ? $"<b>\n\n🏛 География ✈️:  {gameHistory["Points_gameGeographies"]} очков</b>" : "") +
+                    (gameHistory["Points_gameBiology"].AsInt32 > 0 ? $"<b>\n\n🔬 Биология 🦠:  {gameHistory["Points_gameBiology"]} очков</b>" : "") +
+                    (gameHistory["Points_gameMix"].AsInt32 > 0 ? $"<b>\n\n👽 Смешанная 👀:  {gameHistory["Points_gameMix"]} очков</b>" : "") +
+                    $"<b>\n\nДата игры:  {ageStr}</b>";
+
+                await bot.SendTextMessageAsync(
+                    message.Chat.Id,
+                    messageText,
+                    replyMarkup: Statistics_menu(),
+                    parseMode: ParseMode.Html
+                );
+            }
 
             users[user_id].Status = Status.userStats;
             return;
         }
+
         if (message.Text.StartsWith("🏆 ТОП - 20 по разделам 🏆"))
         {
 
@@ -688,6 +710,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
 
             foreach (var gameHistory in userHistory)
             {
+
+
                 await bot.SendTextMessageAsync(
                  message.Chat.Id,
                  $"<code>🤖 BOT:</code>" +
@@ -719,15 +743,23 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 replyMarkup: Game_menu(),
                 parseMode: ParseMode.Html
                 );
+
             foreach (var gameHistory in stat_user)
             {
-                await bot.SendTextMessageAsync(
+                if (gameHistory["Points_gameHistory"] > 0)
+                {
+                    var age = DateTime.Parse(gameHistory["Date_game"].ToString());
+                    var ageStr = age.ToString("dd.MM.yyyy");
+
+                    await bot.SendTextMessageAsync(
                  message.Chat.Id,
                  $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
-                 $"<b>\n\n💂‍♀️ История 👩‍🚀:  {gameHistory["Points_gameHistory"]} очков</b>",
+                 $"<b>\n\n💂‍♀️ История 👩‍🚀:  {gameHistory["Points_gameHistory"]} очков</b>"+
+                 $"<b>\n\nДата игры:  {ageStr}</b>",
                  parseMode: ParseMode.Html
                  );
-
+                }
+   
             }
             users[user_id].Status = Status.userСhoosesStats;
             return;
@@ -745,12 +777,20 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 );
             foreach (var gameHistory in stat_user)
             {
-                await bot.SendTextMessageAsync(
-                 message.Chat.Id,
-                 $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
-                 $"<b>\n\n🏛 География ✈️:  {gameHistory["Points_gameGeographies"]} очков</b>",
-                 parseMode: ParseMode.Html
-                 );
+                if (gameHistory["Points_gameGeographies"] > 0)
+                {
+                    var age = DateTime.Parse(gameHistory["Date_game"].ToString());
+                    var ageStr = age.ToString("dd.MM.yyyy");
+
+                    await bot.SendTextMessageAsync(
+                message.Chat.Id,
+                $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
+                $"<b>\n\n🏛 География ✈️:  {gameHistory["Points_gameGeographies"]} очков</b>"+
+                $"<b>\n\nДата игры:  {ageStr}</b>",
+                parseMode: ParseMode.Html
+                );
+                }    
+                   
 
             }
             users[user_id].Status = Status.userСhoosesStats;
@@ -769,12 +809,20 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 );
             foreach (var gameHistory in stat_user)
             {
-                await bot.SendTextMessageAsync(
+                if (gameHistory["Points_gameBiology"] > 0)
+                {
+                    var age = DateTime.Parse(gameHistory["Date_game"].ToString());
+                    var ageStr = age.ToString("dd.MM.yyyy");
+
+                    await bot.SendTextMessageAsync(
                  message.Chat.Id,
                  $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
-                 $"<b>\n\n🔬 Биология 🦠:  {gameHistory["Points_gameBiology"]} очков</b>",
+                 $"<b>\n\n🔬 Биология 🦠:  {gameHistory["Points_gameBiology"]} очков</b>"+
+                 $"<b>\n\nДата игры:  {ageStr}</b>",
                  parseMode: ParseMode.Html
                  );
+                }
+                    
 
             }
             users[user_id].Status = Status.userСhoosesStats;
@@ -793,12 +841,20 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                 );
             foreach (var gameHistory in stat_user)
             {
-                await bot.SendTextMessageAsync(
-                 message.Chat.Id,
-                 $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
-                 $"<b>\n\n👽 Смешанная 👀:  {gameHistory["Points_gameMix"]} очков</b>",
-                 parseMode: ParseMode.Html
-                 );
+                if (gameHistory["Points_gameMix"] > 0)
+                {
+                    var age = DateTime.Parse(gameHistory["Date_game"].ToString());
+                    var ageStr = age.ToString("dd.MM.yyyy");
+
+                    await bot.SendTextMessageAsync(
+               message.Chat.Id,
+               $"<b>\n👻 User :  {gameHistory["UserID"]}</b>" +
+               $"<b>\n\n👽 Смешанная 👀:  {gameHistory["Points_gameMix"]} очков</b>"+
+                $"<b>\n\nДата игры:  {ageStr}</b>",
+               parseMode: ParseMode.Html
+               );
+                }
+                  
 
             }
             users[user_id].Status = Status.userСhoosesStats;
@@ -843,6 +899,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 1,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -865,6 +923,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 1,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -887,6 +947,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 1,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -962,6 +1024,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 2,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -984,6 +1048,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 2,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -1006,6 +1072,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 2,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -1078,6 +1146,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 3,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -1100,6 +1170,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 3,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -1122,6 +1194,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 3,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -1193,6 +1267,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 4,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -1215,6 +1291,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 4,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -1237,6 +1315,8 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
                         parseMode: ParseMode.Html,
                         replyMarkup: Game_menu()
                         );
+                    db.EndGame($"{users[user_id].UserTgid}", DateTime.UtcNow, 4,
+                    users[user_id].questionGood);
                     users[user_id].questionGood = 0;
                     users[user_id].questionCount = 0;
                     users[user_id].Status = Status.game;
@@ -1496,8 +1576,11 @@ async Task HandleMesssage(ITelegramBotClient bot, Message message, string user_i
         }
     }
 
-    await bot.SendTextMessageAsync(message.Chat.Id,
-            $"Это HandleMesssage {message.Text}");
+    await bot.SendTextMessageAsync(
+            message.Chat.Id,
+            $"<code>🤖 BOT:</code><b> я тебя так не понимаю, прости 😢 </b>",
+            replyMarkup: Game_menu(),
+            parseMode: ParseMode.Html);
     return;
 
 }
