@@ -128,7 +128,7 @@ namespace main
         // добавить игры пользователя 
         public void EndGame(string userId, DateTime date, int gameType, int points)
         {
-             var document = new BsonDocument
+            var document = new BsonDocument
              {
                  { "UserID", userId },
                  { "Date_game", date },
